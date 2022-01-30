@@ -4,12 +4,13 @@
 		<meta name="description" content="a fun tool by office ca" />
 		<title>inverter by office ca</title>
 		<link rel="stylesheet" href="../officeca-assets/officeca-style.css?v=1.0">
+		<link rel="icon" type="image/png" href="../officeca-assets/favicon.ico">
 	</head>
 	<body>
 		<script type="module" src="inverter.js"></script>
 		<div id="main">
 			<h1>inverter<br>by office ca</h1>
-			<p>a fun tool for visualizing your 3D models inside out.
+			<p>visualize your 3D models inside out.
 				<br>effect is purely visual, no geometry is harmed in the process :)
 				<br>built with three.js and glsl.
 				<br>
@@ -17,7 +18,8 @@
 				<br>Rhino 3dm or generic glb/gltf files only. Solid geometry only (no curves).
 				<br>for best results center model at world origin (0, 0, 0).
 				<br>pan + zoom with mouse or touch.
-				<br>input custom hex color to change background.
+				<br>use color picker to change background.
+				<br>press 'x' key to hide menu.
 				<br>'grab' downloads hi-res PNG screenshot (with transparency).
 			</p>
 		</div>
@@ -26,7 +28,7 @@
 			<button id="clearButton">clear</button>
 			<button id="shotButton">grab</button>
 			<button id="pauseButton" title="play/pause the rotation">&#187;</button>
-			<input type="text" id="color-input" value="#000000">
+			<input type="color" id="color-input" title="pick background color" value="#000000">
 		</div>
 	</body>
 </html>

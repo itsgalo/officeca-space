@@ -1,3 +1,3 @@
 # officeca.space
 
-A collection of toys and utilities for web-based architectural visualizations.
+A repository for web-based architectural visualization toys and instruments.
