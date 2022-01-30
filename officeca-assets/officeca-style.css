@@ -1,0 +1,112 @@
+* {
+  -moz-box-sizing: content-box; /* or `border-box` */
+  -webkit-box-sizing: content-box;
+  box-sizing: content-box;
+}
+@font-face {
+  font-family: 'AlteHaasGrotesk';
+  src: url('./AlteHaasGrotesk.eot?#iefix') format('embedded-opentype'),  url('./AlteHaasGrotesk.woff') format('woff'), url('./AlteHaasGrotesk.ttf')  format('truetype'), url('./AlteHaasGrotesk.svg#AlteHaasGrotesk') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+svg path {
+  shape-rendering: crispEdges;
+}
+body {
+  font-family: "AlteHaasGrotesk", sans-serif;
+  background: rgb(0, 0, 0);
+  color: #fff;
+  margin: 0px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+canvas {
+  position: absolute;
+  width: 100%;
+  height: 100%
+}
+#main {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 50%;
+  top: 25%;
+  margin: 0 auto;
+  text-align: center;
+}
+h1 {
+  color: #fff;
+  text-align: center;
+  margin: 0px;
+  padding: 5px;
+  font-size: 4vh;
+}
+h2 {
+  color: #fff;
+  text-align: center;
+  padding: 0px;
+  margin: 0px;
+}
+p {
+  color: #fff;
+  text-align: center;
+  padding: 10px;
+  font-size: 2vh;
+  line-height: 3vh;
+}
+button {
+  display: inline-block;
+  cursor: pointer;
+  position: relative;
+  font-size: inherit;
+  background: none;
+  border: 2px dashed white;
+  border-radius: 4px;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  padding: 8px;
+  margin: 0.1em 0.1em;
+}
+button:hover {
+  color: #ff0000;
+}
+#upload {
+  display: block;
+  position: fixed;
+  padding: 2% 0;
+  margin: 0;
+  top: 0;
+  width: 100%;
+  text-align: center;
+  z-index: 100;
+  font-size: 1.4em;
+}
+input{
+  display: inline-block;
+  padding: 5px;
+  margin: 0.1em 0.1em;
+  font-size: inherit;
+  color: #fff;
+  border: 2px dashed white;
+  border-radius: 4px;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0);
+}
+input[type = text] {
+  padding: 8px;
+}
+input:focus {
+  outline: none;
+}
+
+@media only screen and (max-width: 450px) {
+  #upload {
+    font-size: 1.0em;
+  }
+  input {
+    width: 50%;
+    padding: 8px;
+  }
+
+}

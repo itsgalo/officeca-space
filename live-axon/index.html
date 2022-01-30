@@ -1,0 +1,32 @@
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<meta name="description" content="a fun tool by office ca" />
+		<title>live axon by office ca</title>
+		<link rel="stylesheet" href="../officeca-assets/officeca-style.css?v=1.0">
+	</head>
+	<body>
+		<script type="module" src="shearUpload.js"></script>
+		<div id="main">
+			<h1>live axon<br>by office ca</h1>
+			<p>a fun tool for visualizing 3D models as oblique axonometric projections.
+				<br>effect is purely visual, no geometry is harmed in the process :)
+				<br>built with three.js and glsl.
+				<br>
+				<br>directions:
+				<br>Rhino 3dm or generic glb/gltf files only. pan + zoom with mouse or touch.
+				<br>for best results center model at world origin (0, 0, 0).
+				<br>input custom hex color to change background.
+				<br>'grab' downloads hi-res PNG screenshot (with transparency).
+			</p>
+		</div>
+		<div id="upload">
+			<input type="file" id="model-loader">
+			<button id="clearButton">clear</button>
+			<button id="shotButton">grab</button>
+			<button id="pauseButton" title="play/pause the rotation">&#187;</button>
+			<button id="drawButton" title="toggle drawing mode">mode</button>
+			<input type="text" id="color-input" value="#000000">
+		</div>
+	</body>
+</html>
