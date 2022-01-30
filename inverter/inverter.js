@@ -226,7 +226,7 @@ function screenShot() {
   const rnd = new THREE.WebGLRenderer({alpha: true, preserveDrawingBuffer: true, antialias: true});
   rnd.setSize( renderer.domElement.width * 3, renderer.domElement.height * 3);
   rnd.render(scene, camera);
-  saveAsPNG(rnd, 'live-axon.png');
+  saveAsPNG(rnd, 'inverter.png');
 }
 
 animate();
