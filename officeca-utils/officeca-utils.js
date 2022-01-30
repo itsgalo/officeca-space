@@ -27,7 +27,7 @@ const load3DM = function (f, s, facemat, edgemat, callback) {
     URL.revokeObjectURL(url);
   });
 }
-//load Rhino 3dm file
+//load GLB file
 //usage (file, scene, face material, edge material, callback for extra functions)
 const loadGLB = function (f, s, facemat, edgemat, callback) {
   let file = f.target.files[0];
@@ -58,26 +58,25 @@ const clearFileInput = function (id, callback) {
     newInput.name = oldInput.name;
     newInput.className = oldInput.className;
     newInput.style.cssText = oldInput.style.cssText;
-
     oldInput.parentNode.replaceChild(newInput, oldInput);
     //use callback to reset element for event listener
     callback();
 }
 
-//save a file
+//save a PNG
 //usage (target renderer, file name string)
-const saveAsPNG = function (rndr, fileName) {
+const saveAsPNG = function (rndr, filename) {
   let imgData, imgNode;
   try {
       let str = "image/png";
       imgData = rndr.domElement.toDataURL(str, 1.0);
-      saveFile(imgData.replace(str, 'image/octet-stream'), fileName);
+      saveFile(imgData.replace(str, 'image/octet-stream'), filename);
   } catch (e) {
       console.log(e);
       return;
   }
 }
-
+//generic save a file
 const saveFile = function (strData, filename) {
   let link = document.createElement('a');
   if (typeof link.download === 'string') {
@@ -90,5 +89,18 @@ const saveFile = function (strData, filename) {
       location.replace(uri);
   }
 }
+//save an SVG
+const saveAsSVG = function (rndr, filename) {
+  let XMLS = new XMLSerializer();
+  let svgData = XMLS.serializeToString(rndr.domElement);
+  let preface = '<?xml version="1.0" standalone="no"?>\r\n';
+  let svgBlob = new Blob([preface, svgData], {
+    type: "image/svg+xml;charset=utf-8"
+  });
+  let svgUrl = URL.createObjectURL(svgBlob);
+  let link = document.createElement('a');
+  saveFile(svgUrl, filename);
+}
+
 
 export {saveAsPNG, load3DM, loadGLB, clearFileInput};

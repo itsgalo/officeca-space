@@ -1,66 +1,55 @@
+//turning gltf inside out using vertex shaders
+//by office ca
+//based on mobius transformations by Daniel Piker
+
 import * as THREE from '../officeca-utils/three-modules/three.module.js';
 import { OrbitControls } from '../officeca-utils/three-modules/OrbitControls.js';
-import { EffectComposer } from '../officeca-utils/three-modules/EffectComposer.js';
-import { RenderPass } from '../officeca-utils/three-modules/RenderPass.js';
-import { ShaderPass } from '../officeca-utils/three-modules/ShaderPass.js';
-import { SobelOperatorShader } from '../officeca-utils/three-modules/SobelOperatorShader.js';
 import { saveAsPNG, load3DM, loadGLB, clearFileInput } from '../officeca-utils/officeca-utils.js';
 
 const vshader = `
 uniform float u_time;
+uniform float u_radius;
+
 varying vec3 vNormal;
-varying vec3 posit;
 
-const float shearAmount = 1.4142 / 2.0;
-const float PI = 3.141592653;
-//custom remap function
-float map(float n, float low1, float high1, float low2, float high2) {
-  return low2 + (n - low1) * (high2 - low2) / (high1 - low1);
+// rotate 4th dimension
+void pR(inout vec2 p, float a) {
+  p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
 }
+vec4 inverseStereographic(vec3 p) {
+  float k = 2.0/(1.0+dot(p,p));
+  return vec4(k*p,k-1.0);
+}
+vec3 stereographic(vec4 p4) {
+  float k = 1.0/(1.0+p4.w);
+  return k*p4.xyz;
+}
+vec3 sceneWarped(vec3 p, float r) {
 
-//axonometric shear
-mat4 shearMat = mat4(
-  vec4(1, 0, 0, 0),
-  vec4(0, 1, -1, 0),
-  vec4(0, 0, 1, 0),
-  vec4(0, 0, 0, 1)
-);
+    vec3 pt = p / (r * 4.0);
 
-mat4 rotAnim( float t ) {
-  mat4 rotMatX = mat4(
-    vec4(1, 0, 0, 0),
-    vec4(0, cos(t), -sin(t), 0),
-    vec4(0, sin(t), cos(t), 0),
-    vec4(0, 0, 0, 1)
-  );
-  mat4 rotMatY = mat4(
-    vec4(cos(t), 0, sin(t), 0),
-    vec4(0, 1, 0, 0),
-    vec4(-sin(t), 0, cos(t), 0),
-    vec4(0, 0, 0, 1)
-  );
-  mat4 rotMatZ = mat4(
-    vec4(cos(t), -sin(t), 0, 0),
-    vec4(sin(t), cos(t), 0, 0),
-    vec4(0, 0, 1, 0),
-    vec4(0, 0, 0, 1)
-  );
-  return rotMatY;
+    // Project to 4d
+    vec4 p4 = inverseStereographic(pt);
+
+    // Rotate in the 4th dimension
+    pR(p4.zw, u_time*0.9);
+
+    // Project back to 3d
+    pt = stereographic(p4);
+
+    return pt * r;
 }
 
 void main() {
-  vec4 pos = vec4(position, 1.0) * rotAnim(u_time*0.1) * shearMat;
-  posit = pos.xyz;
   vNormal = normalMatrix * normalize(normal);
-  gl_Position = projectionMatrix * modelViewMatrix * vec4( pos.xyz, 1.0 );
+  vec3 pos = sceneWarped(position, u_radius);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 1.0 );
 }
 `
 const fshader = `
 varying vec3 vNormal;
-varying vec3 posit;
 
 void main() {
-  vec3 p = posit;
   vec3 view_norm  = normalize(vNormal);
   vec3 lightDir1 = vec3(-0.5, 0.5, -0.5);
   vec3 lightDir2 = vec3(0.9, 0.5, 0.9);
@@ -72,54 +61,46 @@ void main() {
   vec4 color = vec4(1.0-intensity, 1.0-intensity, 1.0-intensity, 1.0);
 
   float luma = 0.2126*color.r + 0.7152*color.g + 0.0722*color.b;
-  gl_FragColor = vec4(1.3-luma);
+  vec4 final = mix(vec4(view_norm.r, view_norm.g, view_norm.b, 1.0), vec4(luma), 0.6);
+
+  gl_FragColor = final;
 }
 `
 const fshader2 = `
 varying vec3 vNormal;
-varying vec3 posit;
 
 void main() {
-  vec3 p = posit;
   vec3 view_norm  = normalize(vNormal);
   gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0)*3.0;
 }
 `
+
 let width = window.innerWidth;
 let height = window.innerHeight;
-let lineDrawing = false;
 let uploadVisible = true;
 
 const scene = new THREE.Scene();
-const camera = new THREE.OrthographicCamera( width / - 2 *100, width / 2 *100, height / 2 *100, height / - 2 *100, -1000, 1000 );
-camera.position.z = 100;
-camera.left = -width / 200;
-camera.right = width / 200;
-camera.top = height / 200;
-camera.bottom = -height / 200;
-camera.updateProjectionMatrix();
+const camera = new THREE.PerspectiveCamera(
+    45,
+    window.innerWidth / window.innerHeight,
+    0.001,
+    10000
+  );
+camera.position.z = 10;
 
-const renderer = new THREE.WebGLRenderer({alpha: true, preserveDrawingBuffer: true, antialias: true});
-renderer.setSize(width, height);
+const renderer = new THREE.WebGLRenderer( {alpha: true, preserveDrawingBuffer: true, antialias: true} );
+renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 document.body.style.backgroundColor = document.getElementById('color-input').value;
 
-const composer = new EffectComposer(renderer);
-const renderPass = new RenderPass( scene, camera );
-composer.addPass( renderPass );
-const effectSobel = new ShaderPass( SobelOperatorShader );
-effectSobel.uniforms[ 'resolution' ].value.x = width;// * window.devicePixelRatio;
-effectSobel.uniforms[ 'resolution' ].value.y = height;// * window.devicePixelRatio;
-composer.addPass( effectSobel );
-
+//init clock and no autostart
 const clock = new THREE.Clock({autoStart : false});
+let running = false;
 
 //screengrab
 document.getElementById('shotButton').addEventListener('click', screenShot);
 //pause/play
 document.getElementById('pauseButton').addEventListener('click', pause);
-//toggle line drawing
-document.getElementById('drawButton').addEventListener('click', drawingMode);
 //handle scene clearing
 document.getElementById("clearButton").addEventListener('click', clearScene);
 //toggle fullscreen
@@ -129,7 +110,6 @@ let modelUploader = document.getElementById('model-loader');
 modelUploader.addEventListener( 'change', loadModel);
 //init orbit controls
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableRotate = false;
 
 function fullscreen(e) {
   if (e.key == 'x') {
@@ -156,14 +136,14 @@ function loadModel(e) {
   let ext = file.substring(lastDot + 1);
   //console.log(ext);
   if (ext == 'glb' || ext == 'gltf') {
-    loadGLB(e, scene, solidMat, wireMat, function(){
+    loadGLB(e, scene, warpMat, wireMat, function(){
       //reset time
       uniforms.u_time.value = 0.0;
       //clear instructions
       document.getElementById('main').style.display = 'none';
     });
   } else if (ext == '3dm') {
-    load3DM(e, scene, solidMat, wireMat, function(){
+    load3DM(e, scene, warpMat, wireMat, function(){
       uniforms.u_time.value = 0.0;
       document.getElementById('main').style.display = 'none';
     });
@@ -172,10 +152,18 @@ function loadModel(e) {
   }
 }
 
-
 const uniforms = {};
 uniforms.u_time = { value: 0.0 };
+uniforms.u_mouse = { value:{ x:0.0, y:0.0 }};
 uniforms.u_resolution = { value:{ x:0, y:0 }};
+uniforms.u_radius = { value: 2.0 };
+
+const warpMat = new THREE.ShaderMaterial( {
+  uniforms: uniforms,
+  vertexShader: vshader,
+  fragmentShader: fshader,
+  wireframe: false
+} );
 
 const wireMat = new THREE.ShaderMaterial( {
   uniforms: uniforms,
@@ -184,16 +172,33 @@ const wireMat = new THREE.ShaderMaterial( {
   wireframe: false
 } );
 
-const solidMat = new THREE.ShaderMaterial({
-  uniforms: uniforms,
-  vertexShader: vshader,
-  fragmentShader: fshader,
+const debugMat = new THREE.MeshBasicMaterial({
+  color: 0xffffff,
   wireframe: false
 });
 
-const debugMat = new THREE.MeshBasicMaterial({
-  color: 0xffffff
-});
+
+onWindowResize();
+
+if ('ontouchstart' in window){
+  document.addEventListener('touchmove', move);
+}else{
+  window.addEventListener( 'resize', onWindowResize, false );
+  document.addEventListener('mousemove', move);
+}
+
+function move(evt){
+  uniforms.u_mouse.value.x = (evt.touches) ? evt.touches[0].clientX : evt.clientX;
+  uniforms.u_mouse.value.y = (evt.touches) ? evt.touches[0].clientY : evt.clientY;
+}
+
+function onWindowResize( event ) {
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  uniforms.u_resolution.value.x = window.innerWidth;
+  uniforms.u_resolution.value.y = window.innerHeight;
+}
 
 function pause() {
   if (clock.running) {
@@ -201,10 +206,6 @@ function pause() {
   } else {
     clock.start();
   }
-}
-
-function drawingMode() {
-  lineDrawing = !lineDrawing;
 }
 
 function animate() {
@@ -218,28 +219,13 @@ function animate() {
     document.getElementById('upload').style.display = 'block';
   }
 
-  if (lineDrawing == true) {
-    composer.render();
-  } else {
-    renderer.render(scene, camera);
-  }
+  renderer.render( scene, camera );
 }
 
 function screenShot() {
   const rnd = new THREE.WebGLRenderer({alpha: true, preserveDrawingBuffer: true, antialias: true});
   rnd.setSize( renderer.domElement.width * 3, renderer.domElement.height * 3);
-  if (lineDrawing == true) {
-    const comp = new EffectComposer(rnd);
-    const rp = new RenderPass(scene, camera);
-    comp.addPass( rp );
-    const sobel = new ShaderPass(SobelOperatorShader);
-    sobel.uniforms['resolution'].value.x = renderer.domElement.width * 3;
-    sobel.uniforms['resolution'].value.y = renderer.domElement.height * 3;
-    comp.addPass(sobel);
-    comp.render();
-  } else {
-    rnd.render(scene, camera);
-  }
+  rnd.render(scene, camera);
   saveAsPNG(rnd, 'live-axon.png');
 }
 
