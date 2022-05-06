@@ -8,6 +8,7 @@ import { saveAsPNG, load3DM, loadGLB, clearFileInput } from '../officeca-utils/o
 
 const vshader = `
 uniform float u_time;
+uniform int wormseye;
 varying vec3 vNormal;
 varying vec3 posit;
 
@@ -18,13 +19,17 @@ float map(float n, float low1, float high1, float low2, float high2) {
   return low2 + (n - low1) * (high2 - low2) / (high1 - low1);
 }
 
-//axonometric shear
-mat4 shearMat = mat4(
-  vec4(1, 0, 0, 0),
-  vec4(0, 1, -1, 0),
-  vec4(0, 0, 1, 0),
-  vec4(0, 0, 0, 1)
-);
+//axonometric shear (must be function)
+mat4 shearGeo( int w ) {
+  mat4 shearMat = mat4(
+    vec4(1, 0, 0, 0),
+    vec4(0, 1, 1 * w, 0),
+    vec4(0, 0, 1, 0),
+    vec4(0, 0, 0, 1)
+  );
+  return shearMat;
+}
+
 
 mat4 rotAnim( float t ) {
   mat4 rotMatX = mat4(
@@ -49,7 +54,7 @@ mat4 rotAnim( float t ) {
 }
 
 void main() {
-  vec4 pos = vec4(position, 1.0) * rotAnim(u_time*0.1) * shearMat;
+  vec4 pos = vec4(position, 1.0) * rotAnim(u_time*0.1) * shearGeo(wormseye);
   posit = pos.xyz;
   vNormal = normalMatrix * normalize(normal);
   gl_Position = projectionMatrix * modelViewMatrix * vec4( pos.xyz, 1.0 );
@@ -122,6 +127,8 @@ document.getElementById('pauseButton').addEventListener('click', pause);
 document.getElementById('drawButton').addEventListener('click', drawingMode);
 //handle scene clearing
 document.getElementById("clearButton").addEventListener('click', clearScene);
+//handle worms eye view
+document.getElementById("flipButton").addEventListener('click', wormsEye);
 //toggle fullscreen
 window.addEventListener('keydown', fullscreen);
 //init uploader
@@ -175,7 +182,8 @@ function loadModel(e) {
 
 const uniforms = {};
 uniforms.u_time = { value: 0.0 };
-uniforms.u_resolution = { value:{ x:0, y:0 }};
+//uniforms.u_resolution = { value:{ x:0, y:0 }};
+uniforms.wormseye = { value: 1};
 
 const wireMat = new THREE.ShaderMaterial( {
   uniforms: uniforms,
@@ -205,6 +213,10 @@ function pause() {
 
 function drawingMode() {
   lineDrawing = !lineDrawing;
+}
+
+function wormsEye() {
+  uniforms.wormseye.value *= -1;
 }
 
 function animate() {
