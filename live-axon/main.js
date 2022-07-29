@@ -3,7 +3,7 @@ import { OrbitControls } from '../officeca-utils/three-modules/OrbitControls.js'
 import { EffectComposer } from '../officeca-utils/three-modules/EffectComposer.js';
 import { RenderPass } from '../officeca-utils/three-modules/RenderPass.js';
 import { ShaderPass } from '../officeca-utils/three-modules/ShaderPass.js';
-import { SobelOperatorShader } from '../officeca-utils/three-modules/SobelOperatorShader.js';
+import { SobelOperatorShader } from '../officeca-utils/three-modules/TestShader.js';
 import { saveAsPNG, load3DM, loadGLB, clearFileInput } from '../officeca-utils/officeca-utils.js';
 
 const vshader = `
