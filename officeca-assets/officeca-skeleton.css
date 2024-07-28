@@ -4,15 +4,15 @@
   box-sizing: content-box;
 }
 @font-face {
-  font-family: 'AlteHaasGrotesk';
-  src: url('./AlteHaasGrotesk.eot?#iefix') format('embedded-opentype'),  url('./AlteHaasGrotesk.woff') format('woff'), url('./AlteHaasGrotesk.ttf')  format('truetype'), url('./AlteHaasGrotesk.svg#AlteHaasGrotesk') format('svg');
+  font-family: 'office-ca-mono';
+  src: url('./office-ca-mono-lt.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
 
 html,
 body {
-  font-family: "AlteHaasGrotesk", sans-serif;
+  font-family: "office-ca-mono", monospace;
   background: rgb(0, 0, 0);
   color: rgb(230, 230, 230);
   height: 100%;
