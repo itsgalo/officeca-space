@@ -10,7 +10,7 @@ const load3DM = function (f, s, facemat, edgemat, callback) {
   let file = f.target.files[0];
   let loader = new Rhino3dmLoader();
   let url = URL.createObjectURL(file);
-  loader.setLibraryPath( 'https://cdn.jsdelivr.net/npm/rhino3dm@7.11.1/' );
+  loader.setLibraryPath( 'https://cdn.jsdelivr.net/npm/rhino3dm@8.4.0/' ); //https://cdn.jsdelivr.net/npm/rhino3dm@7.11.1/
   loader.load(url, function(object) {
     s.add(object);
     object.traverse( function ( child ) {
@@ -25,7 +25,15 @@ const load3DM = function (f, s, facemat, edgemat, callback) {
     });
     callback();
     URL.revokeObjectURL(url);
-  });
+  }, function ( progress ) {
+
+    console.log( ( progress.loaded / progress.total * 100 ) + '%' );
+
+  }, function ( error ) {
+
+    console.log( error );
+
+  } );
 }
 //load GLB file
 //usage (file, scene, face material, edge material, callback for extra functions)

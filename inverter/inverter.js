@@ -5,6 +5,7 @@
 import * as THREE from '../officeca-utils/three-modules/three.module.js';
 import { OrbitControls } from '../officeca-utils/three-modules/OrbitControls.js';
 import { saveAsPNG, load3DM, loadGLB, clearFileInput } from '../officeca-utils/officeca-utils.js';
+import { GUI } from '../officeca-utils/lil-gui.module.min.js';
 
 const vshader = `
 uniform float u_time;
@@ -74,6 +75,35 @@ void main() {
   gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0)*3.0;
 }
 `
+//GUI parameters
+let gui, modelLoader, bgColor;
+
+let params = {
+  loadFile: function() { 
+    document.getElementById('model-loader').click();
+  },
+  label: 'none',
+  pause: function() {
+    document.getElementById('pauseButton').click();
+  },
+  screenshot: function() {
+    document.getElementById('shotButton').click();
+  },
+  clear: function() {
+    document.getElementById('clearButton').click();
+  },
+  color: '#000000'
+};
+
+document.getElementById('model-loader').addEventListener( 'change', loadModel);
+//screengrab
+document.getElementById('shotButton').addEventListener('click', screenShot);
+//pause/play
+document.getElementById('pauseButton').addEventListener('click', pause);
+//handle scene clearing
+document.getElementById("clearButton").addEventListener('click', clearScene);
+//toggle fullscreen
+window.addEventListener('keydown', fullscreen);
 
 let width = window.innerWidth;
 let height = window.innerHeight;
@@ -91,25 +121,32 @@ camera.position.z = 10;
 const renderer = new THREE.WebGLRenderer( {alpha: true, preserveDrawingBuffer: true, antialias: true} );
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
-document.body.style.backgroundColor = document.getElementById('color-input').value;
+document.body.style.backgroundColor = params.color;
 
 //init clock and no autostart
 const clock = new THREE.Clock({autoStart : false});
 let running = false;
 
-//screengrab
-document.getElementById('shotButton').addEventListener('click', screenShot);
-//pause/play
-document.getElementById('pauseButton').addEventListener('click', pause);
-//handle scene clearing
-document.getElementById("clearButton").addEventListener('click', clearScene);
-//toggle fullscreen
-window.addEventListener('keydown', fullscreen);
-//init uploader
-let modelUploader = document.getElementById('model-loader');
-modelUploader.addEventListener( 'change', loadModel);
 //init orbit controls
 const controls = new OrbitControls(camera, renderer.domElement);
+
+function initGUI() {
+  gui = new GUI();
+  gui.title('controls');
+  const viewFolder = gui.addFolder('view tools');
+
+  gui.add(params, 'loadFile').name('load model');
+  modelLoader = gui.add( params, 'label' ).name( 'file name:' );
+  gui.add(params, 'pause').name('pause');
+  gui.add(params, 'screenshot');
+  gui.add(params, 'clear');
+
+  // viewFolder.add(params, 'flip').name('flip axon');
+  // viewFolder.add(params, 'line').name('line dwg');
+  bgColor = viewFolder.addColor( params, 'color').name('bg color');
+
+
+}
 
 function fullscreen(e) {
   if (e.key == 'x') {
@@ -123,8 +160,8 @@ function clearScene() {
   }
   clearFileInput('model-loader', function() {
     //reset modeluploader for even listener
-    modelUploader = document.getElementById('model-loader');
-    modelUploader.addEventListener( 'change', loadModel);
+    document.getElementById('model-loader').addEventListener( 'change', loadModel);
+    modelLoader.setValue('none');
   });
   //reappear instructions
   document.getElementById('main').style.display = 'block';
@@ -211,7 +248,7 @@ function pause() {
 function animate() {
   requestAnimationFrame( animate );
   uniforms.u_time.value += clock.getDelta();
-  document.body.style.backgroundColor = document.getElementById('color-input').value;
+  document.body.style.backgroundColor = bgColor.getValue();
 
   if (!uploadVisible) {
     document.getElementById('upload').style.display = 'none';
@@ -229,4 +266,5 @@ function screenShot() {
   saveAsPNG(rnd, 'inverter.png');
 }
 
+initGUI();
 animate();

@@ -18,19 +18,16 @@
 				<br>Rhino 3dm or generic glb/gltf files only. Solid geometry only (no curves).
 				<br>for best results center model at world origin (0, 0, 0).
 				<br>pan + zoom with mouse or touch.
-				<br>use color picker to change background.
-				<br>press 'x' key to hide menu.
-				<br>'grab' downloads hi-res PNG screenshot (with transparency).
+				<br>use control panel to customize the display.
 			</p>
 		</div>
 		<div id="upload">
-			<input type="file" id="model-loader">
-			<button id="clearButton">clear</button>
-			<button id="shotButton">grab</button>
-			<button id="pauseButton" title="play/pause the rotation">&#187;</button>
-			<button id="flipButton" title="worm's eye view">&#8645;</button>
-			<button id="drawButton" title="toggle drawing mode">mode</button>
-			<input type="color" id="color-input" title="pick background color" value="#000000">
+			<input type="file" id="model-loader" style="visibility:hidden"/>
+			<button id="clearButton" style="visibility:hidden">clear</button>
+			<button id="shotButton" style="visibility:hidden">grab</button>
+			<button id="pauseButton" title="play/pause the rotation" style="visibility:hidden">&#187;</button>
+			<button id="flipButton" title="worm's eye view" style="visibility:hidden">&#8645;</button>
+			<button id="drawButton" title="toggle drawing mode" style="visibility:hidden">mode</button>
 		</div>
 	</body>
 </html>

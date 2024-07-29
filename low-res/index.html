@@ -2,20 +2,20 @@
 	<head>
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<meta name="description" content="a fun tool by office ca" />
-		<title>inverter by office ca</title>
+		<title>low-res by office ca</title>
 		<link rel="stylesheet" href="../officeca-assets/officeca-style.css?v=1.0">
 		<link rel="icon" type="image/png" href="../officeca-assets/favicon.ico">
 	</head>
 	<body>
-		<script type="module" src="inverter.js"></script>
+		<script type="module" src="main.js"></script>
 		<div id="main">
-			<h1>inverter<br>by office ca</h1>
-			<p>visualize your 3D models inside out.
-				<br>effect is purely visual, no geometry is harmed in the process :)
+			<h1>low-res<br>by office ca</h1>
+			<p>pixelated visualizer for 3D models.
+				<br>inspired by retro games and early painting programs.
 				<br>built with three.js and glsl.
 				<br>
 				<br>directions:
-				<br>Rhino 3dm or generic glb/gltf files only. Solid geometry only (no curves).
+				<br>Rhino 3dm or generic glb/gltf files only. Solid mesh geometry only (no curves).
 				<br>for best results center model at world origin (0, 0, 0).
 				<br>pan + zoom with mouse or touch.
 				<br>use control panel to customize the display.
@@ -26,6 +26,8 @@
 			<button id="clearButton" style="visibility:hidden">clear</button>
 			<button id="shotButton" style="visibility:hidden">grab</button>
 			<button id="pauseButton" title="play/pause the rotation" style="visibility:hidden">&#187;</button>
+			<button id="flipButton" title="worm's eye view" style="visibility:hidden">&#8645;</button>
+			<button id="drawButton" title="toggle drawing mode" style="visibility:hidden">mode</button>
 		</div>
 	</body>
 </html>

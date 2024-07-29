@@ -5,6 +5,7 @@ import { RenderPass } from '../officeca-utils/three-modules/RenderPass.js';
 import { ShaderPass } from '../officeca-utils/three-modules/ShaderPass.js';
 import { SobelOperatorShader } from '../officeca-utils/three-modules/TestShader.js';
 import { saveAsPNG, load3DM, loadGLB, clearFileInput } from '../officeca-utils/officeca-utils.js';
+import { GUI } from '../officeca-utils/lil-gui.module.min.js';
 
 const vshader = `
 uniform float u_time;
@@ -90,35 +91,32 @@ void main() {
   gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0)*3.0;
 }
 `
-let width = window.innerWidth;
-let height = window.innerHeight;
-let lineDrawing = false;
-let uploadVisible = true;
+//GUI parameters
+let gui, modelLoader, bgColor;
 
-const scene = new THREE.Scene();
-const camera = new THREE.OrthographicCamera( width / - 2 *100, width / 2 *100, height / 2 *100, height / - 2 *100, -4000, 4000 );
-camera.position.z = 100;
-camera.left = -width / 200;
-camera.right = width / 200;
-camera.top = height / 200;
-camera.bottom = -height / 200;
-camera.updateProjectionMatrix();
-
-const renderer = new THREE.WebGLRenderer({alpha: true, preserveDrawingBuffer: true, antialias: true});
-renderer.setSize(width, height);
-document.body.appendChild( renderer.domElement );
-document.body.style.backgroundColor = document.getElementById('color-input').value;
-
-const composer = new EffectComposer(renderer);
-const renderPass = new RenderPass( scene, camera );
-composer.addPass( renderPass );
-const effectSobel = new ShaderPass( SobelOperatorShader );
-effectSobel.uniforms[ 'resolution' ].value.x = width;// * window.devicePixelRatio;
-effectSobel.uniforms[ 'resolution' ].value.y = height;// * window.devicePixelRatio;
-composer.addPass( effectSobel );
-
-const clock = new THREE.Clock({autoStart : false});
-
+let params = {
+  loadFile: function() { 
+    document.getElementById('model-loader').click();
+  },
+  label: 'none',
+  pause: function() {
+    document.getElementById('pauseButton').click();
+  },
+  screenshot: function() {
+    document.getElementById('shotButton').click();
+  },
+  flip: function() {
+    document.getElementById('flipButton').click();
+  },
+  line: function() {
+    document.getElementById('drawButton').click();
+  },
+  clear: function() {
+    document.getElementById('clearButton').click();
+  },
+  color: '#000000'
+};
+document.getElementById('model-loader').addEventListener( 'change', loadModel);
 //screengrab
 document.getElementById('shotButton').addEventListener('click', screenShot);
 //pause/play
@@ -131,12 +129,57 @@ document.getElementById("clearButton").addEventListener('click', clearScene);
 document.getElementById("flipButton").addEventListener('click', wormsEye);
 //toggle fullscreen
 window.addEventListener('keydown', fullscreen);
-//init uploader
-let modelUploader = document.getElementById('model-loader');
-modelUploader.addEventListener( 'change', loadModel);
+
+let width = window.innerWidth;
+let height = window.innerHeight;
+let lineDrawing = false;
+let uploadVisible = true;
+
+const scene = new THREE.Scene();
+const camera = new THREE.OrthographicCamera( width / - 200, width / 200, height / 200, height / - 200, -4000, 4000 );
+camera.position.z = 100;
+camera.left = -width / 200;
+camera.right = width / 200;
+camera.top = height / 200;
+camera.bottom = -height / 200;
+camera.updateProjectionMatrix();
+
+const renderer = new THREE.WebGLRenderer({alpha: true, preserveDrawingBuffer: true, antialias: true});
+renderer.setSize(width, height);
+document.body.appendChild( renderer.domElement );
+document.body.style.backgroundColor = params.color;
+
+const composer = new EffectComposer(renderer);
+const renderPass = new RenderPass( scene, camera );
+composer.addPass( renderPass );
+const effectSobel = new ShaderPass( SobelOperatorShader );
+effectSobel.uniforms[ 'resolution' ].value.x = width;// * window.devicePixelRatio;
+effectSobel.uniforms[ 'resolution' ].value.y = height;// * window.devicePixelRatio;
+composer.addPass( effectSobel );
+
+const clock = new THREE.Clock({autoStart : false});
+
 //init orbit controls
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableRotate = false;
+
+function initGUI() {
+  gui = new GUI();
+  gui.title('controls');
+  const viewFolder = gui.addFolder('view tools');
+
+  gui.add(params, 'loadFile').name('load model');
+  modelLoader = gui.add( params, 'label' ).name( 'file name:' );
+  gui.add(params, 'pause').name('pause');
+  gui.add(params, 'screenshot');
+  gui.add(params, 'clear');
+
+  viewFolder.add(params, 'flip').name('flip axon');
+  viewFolder.add(params, 'line').name('line dwg');
+  bgColor = viewFolder.addColor( params, 'color').name('bg color');
+
+
+}
 
 function fullscreen(e) {
   if (e.key == 'x') {
@@ -150,8 +193,8 @@ function clearScene() {
   }
   clearFileInput('model-loader', function() {
     //reset modeluploader for even listener
-    modelUploader = document.getElementById('model-loader');
-    modelUploader.addEventListener( 'change', loadModel);
+    document.getElementById('model-loader').addEventListener( 'change', loadModel);
+    modelLoader.setValue('none');
   });
   //reappear instructions
   document.getElementById('main').style.display = 'block';
@@ -159,6 +202,7 @@ function clearScene() {
 
 function loadModel(e) {
   let file = e.target.files[0].name;
+  modelLoader.setValue( e.target.files[0].name );
   let lastDot = file.lastIndexOf('.');
   let ext = file.substring(lastDot + 1);
   //console.log(ext);
@@ -183,7 +227,7 @@ function loadModel(e) {
 const uniforms = {};
 uniforms.u_time = { value: 0.0 };
 //uniforms.u_resolution = { value:{ x:0, y:0 }};
-uniforms.wormseye = { value: 1};
+uniforms.wormseye = { value: -1};
 
 const wireMat = new THREE.ShaderMaterial( {
   uniforms: uniforms,
@@ -222,7 +266,7 @@ function wormsEye() {
 function animate() {
   requestAnimationFrame( animate );
   uniforms.u_time.value += clock.getDelta();
-  document.body.style.backgroundColor = document.getElementById('color-input').value;
+  document.body.style.backgroundColor = bgColor.getValue();
 
   if (!uploadVisible) {
     document.getElementById('upload').style.display = 'none';
@@ -255,4 +299,5 @@ function screenShot() {
   saveAsPNG(rnd, 'live-axon.png');
 }
 
+initGUI();
 animate();

@@ -101,8 +101,7 @@ a:hover {
 }
 
 .outline {
-  border: 2px dashed #fff;
-  border-radius: 15px;
+  border: 1px solid #fff;
   padding: 0;
   margin: 0;
 }
@@ -111,8 +110,7 @@ a:hover {
 
 .container {
   width: 90%;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 5%;
 }
 
 .row {

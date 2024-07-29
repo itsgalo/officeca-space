@@ -23,92 +23,60 @@ body {
 canvas {
   position: absolute;
   width: 100%;
-  height: 100%
+  height: 100%;
+  image-rendering: pixelated;
+}
+#upload {
+  height: 0px;
+  display: none;
 }
 #main {
   display: block;
   position: relative;
   width: 100%;
   height: 50%;
-  top: 25%;
-  margin: 0 auto;
-  text-align: center;
+  margin: 5%;
+  text-align: left;
 }
 h1 {
   color: #fff;
-  text-align: center;
+  text-align: left;
   margin: 0px;
   padding: 5px;
   font-size: 4vh;
 }
 h2 {
   color: #fff;
-  text-align: center;
+  text-align: left;
   padding: 0px;
   margin: 0px;
 }
 p {
   color: #fff;
-  text-align: center;
+  text-align: left;
   padding: 10px;
   font-size: 2vh;
   line-height: 3vh;
 }
-button {
-  display: inline-block;
-  vertical-align: middle;
-  cursor: pointer;
-  position: relative;
-  font-size: inherit;
-  background: none;
-  border: 2px dashed white;
-  border-radius: 4px;
-  color: white;
-  text-align: center;
-  text-decoration: none;
-  padding: 8px;
-  margin: 0.1em;
+
+
+.lil-gui {
+  --background-color: #000000;
+  --title-text-color: #fff;
+	--title-background-color: #000;
+  --text-color: #fff;
+  --widget-color: #7d7d7d;
+  --font-family: 'office-ca-mono';
+  --widget-border-radius: 0;
+  --padding: 8;
+  --spacing: 8;
+  --title-height: 20px;
 }
-button:hover {
-  color: #ff0000;
-}
-#upload {
-  display: block;
+
+.lil-gui.autoPlace {
+  max-height: 100%;
   position: fixed;
-  padding: 0;
-  margin: 2% 0;
+  right: 0px;
   top: 0;
-  width: 100%;
-  text-align: center;
-  z-index: 100;
-  font-size: 1.4em;
-}
-input{
-  display: inline-block;
-  vertical-align: middle;
-  padding: 5px;
-  margin: 0.1em 0.1em;
-  font-size: inherit;
-  color: #fff;
-  border: 2px dashed white;
-  border-radius: 4px;
-  text-align: center;
-  background-color: rgba(0, 0, 0, 0);
-}
-input[type = color] {
-  height: 32px;
-}
-input:focus {
-  outline: none;
-}
-
-@media only screen and (max-width: 450px) {
-  #upload {
-    font-size: 1.0em;
-  }
-  input {
-    width: 50%;
-    padding: 8px;
-  }
-
+  z-index: 1001;
 }
