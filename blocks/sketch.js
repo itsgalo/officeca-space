@@ -1,5 +1,76 @@
-//boilerplate template for p5 rendering
-//office ca 2022
+//blocks by office ca
+//built for BuildFest '24 at the Bethel Woods Art and Architecture Festival
+
+
+const hasTouch = 'ontouchstart' in document.documentElement;
+
+function init(element) {
+
+    const pointer = {
+        x  : 0,
+        y  : 0,
+        px : 0,
+        py : 0,
+        pressed : false,
+        lastClick : 0,
+        doubleClick: function() { console.log('double clicked!')},
+        hasTouch
+    }
+
+    function press(x, y, c){
+        let rect = c.getBoundingClientRect();
+        pointer.pressed = true;
+        pointer.x = x - rect.left;
+        pointer.y = y - rect.top;
+
+        //handle double tap/click
+        let dd = new Date();
+        let tt = dd.getTime();
+        const tapLag = 300; // 500ms
+        if (tt - pointer.lastClick < tapLag) {
+          pointer.doubleClick();
+        }
+        pointer.lastClick = tt;
+    }
+
+    function move(x, y, c){
+        let rect = c.getBoundingClientRect();
+        pointer.x  = x - rect.left;
+        pointer.y  = y - rect.top;
+    }
+
+    function release(x, y){
+        pointer.pressed = false;
+    }
+
+    if (hasTouch) {
+        element.addEventListener("touchstart", function(e) {
+            e.preventDefault();
+            press(e.touches[0].clientX, e.touches[0].clientY, element);
+        })
+        element.addEventListener("touchmove", function(e) {
+            e.preventDefault();
+            move(e.touches[0].clientX, e.touches[0].clientY, element);
+        })
+        element.addEventListener("touchend", function(e) {
+            e.preventDefault();
+            pointer.pressed = false;
+            //release(e.touches[0].clientX, e.touches[0].clientY);
+        })
+    } else {
+        element.addEventListener('mousedown', function(e){
+            press(e.clientX, e.clientY, element);
+        })
+        element.addEventListener('mousemove', function(e){
+            move(e.clientX, e.clientY, element);
+        })
+        element.addEventListener('mouseup', function(e){
+            release(e.clientX, e.clientY);
+        })
+    }
+
+    return pointer;
+}
 
 // Class for a plane that extends to infinity.
 class IntersectPlane {
@@ -306,6 +377,8 @@ function unproject(vector, camera) {
 }
 
 let modal;
+let can;
+let pointer;
 let grid = 30;
 let camera;
 let raycaster;
@@ -317,13 +390,10 @@ let bodies = [];
 let bodyColors = [];
 let groundMaterial, boxMaterial, contactMaterial;
 
-let physicsWorld, dispatcher, broadphase, solver, collisionConfig;
-let groundBody, boxBodies = [];
-let boxSize = 1; // Cube size in physics world
-let boxGraphics = []; // Store p5.js box graphics
+let groundBody;
+
 
 let colors = ['#265b98', '#ffbe1b', '#be3b37'];
-
 
 function snapToPt(pt) {
   let cell = round(pt / (grid));
@@ -331,7 +401,16 @@ function snapToPt(pt) {
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight, WEBGL);
+  
+  can = createCanvas(windowWidth, windowHeight, WEBGL);
+
+  //custom pointer
+  pointer = init(can.elt);
+  //set custom double click function here
+  pointer.doubleClick = function () {
+      //console.log('hit')
+      onDoubleTap();
+  }
 
   // Select the existing div by its ID
   modal = select('#about');
@@ -351,7 +430,6 @@ function setup() {
   button.mousePressed(collapse);
 
   camera = createCamera();//height / 2 / tan((30 * PI) / 180);
-  console.log(camera);
   
   //camera.ortho();
   // Set the perspective camera
@@ -511,7 +589,8 @@ function resetAll() {
 }
 
 function screenshot() {
-  save('myBlocks.png');
+  //save('myBlocks.png');
+  modal.show();
 }
 
 // Function to hide the modal when clicked
@@ -520,17 +599,18 @@ function hideModal() {
 }
 
 // Use the touchStarted function to detect touch events on mobile
-function mousePressed() {
-  let currentTime = millis();  // Get the current time in milliseconds
-  let timeSinceLastTap = currentTime - lastTap;  // Calculate the time difference
+// function mousePressed() {
+//   let currentTime = millis();  // Get the current time in milliseconds
+//   let timeSinceLastTap = currentTime - lastTap;  // Calculate the time difference
 
-  // If the time difference is less than 300 milliseconds, it's a double-tap
-  if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
-    onDoubleTap();
-  }
+//   // If the time difference is less than 300 milliseconds, it's a double-tap
+//   if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
+//     onDoubleTap();
+//   }
 
-  lastTap = currentTime;  // Update the last tap time
-}
+//   lastTap = currentTime;  // Update the last tap time
+//   return false;
+// }
 
 // This function is triggered on a double-tap
 function onDoubleTap() {
