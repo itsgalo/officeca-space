@@ -1,0 +1,68 @@
+@font-face {
+  font-family: 'office-ca-mono';
+  src: url('./office-ca-mono-lt.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html, body {
+  font-family: 'office-ca-mono';
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none; /* supported by Chrome and Opera */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+}
+canvas {
+  display: block;
+}
+
+button {
+  font-family: 'office-ca-mono';
+  display: inline-block;
+  cursor: pointer;
+  position: relative;
+  font-size: inherit;
+  background: none;
+  border: 1px dashed white;
+  border-radius: 0px;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  padding: 4px;
+}
+
+.popup {
+  z-index: 999;
+  display: inline-block;
+  position: fixed;
+  margin: 0 auto;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.popup-content {
+  background-color: rgba(0, 42, 255, 0.9);
+  color: rgb(255, 255, 255);
+  margin: 0 auto;
+  padding: 20px;
+  width: 80%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: block;  /* Ensure it's visible at first */
+  text-transform: lowercase;
+  font-family: 'office-ca-mono';
+  font-size: 16pt;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.popup-content a {
+  color: white;
+}
