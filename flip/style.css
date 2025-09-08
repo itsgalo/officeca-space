@@ -1,0 +1,58 @@
+@font-face {
+  font-family: 'office-ca-mono';
+  src: url('../officeca-assets/office-ca-mono-lt.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none; /* supported by Chrome and Opera */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff; /* Optional background color */
+}
+canvas {
+  display: block;
+  transform: scale(1);
+  transform-origin: center;
+  image-rendering: pixelated;
+}
+#stats {
+  color: rgb(0, 0, 0);
+  background-color: white;
+  font-family: 'office-ca-mono', monospace;
+  font-size: 10pt;
+  position: fixed;
+  padding: 10px;
+  margin: 40px;
+}
+.lil-gui {
+  --background-color: #ffffff;
+  --title-text-color: #000;
+	--title-background-color: #fff;
+  --text-color: #000;
+  --widget-color: #d5d5d5;
+  --font-family: 'office-ca-mono';
+  --widget-border-radius: 0;
+  --padding: 8px;
+  --spacing: 8px;
+  --title-height: 20px;
+}
+
+.lil-gui.autoPlace {
+  max-height: 100%;
+  position: fixed;
+  right: 40px;
+  top: 40px;
+  z-index: 1001;
+}

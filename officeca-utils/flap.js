@@ -1,14 +1,14 @@
-//flappy class for cycling through number values
+//flap class for cycling through number values
 
 class Flap {
   constructor(index, maxNum, target) {
     this.index = index;          // Position in sequence of flaps
     this.maxNum = maxNum;        // Maximum number to display
-    this.target = target;             // Target number to reach
+    this.target = target;        // Target number to reach
     this.current = 0;            // Current displayed number
     this.delay = index;          // Initial delay before animation starts
     this.frame = 0;              // Current animation frame
-    this.flipSpeed = 10;          // How many numbers to skip per flip
+    this.flipSpeed = 10;         // How many numbers to skip per flip
   }
 
   setTarget(newTarget) {
@@ -26,7 +26,7 @@ class Flap {
 
   flip() {
     if (this.delay > 0) {
-      this.delay -= 1.0;
+      this.delay -= 5.0;
       return;
     }
 
