@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stitch: A Cross Stitch Pattern Maker</title>
+<link rel="stylesheet" href="../officeca-assets/officeca-style.css?v=1.0">
+<!-- <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"> -->
+<style>
+:root{
+  /* layout: slim tool header; three columns (settings | chart | floss key); stacks to one column on phones */
+  --paper:#eceeea; --panel:#fafaf7; --chart:#ffffff; --ink:#1b2126; --muted:#5d6970; --line:#d2d7d3;
+  --grid:#a9b1b2; --grid10:#1b2126; --accent:#b0203a; --accent-ink:#ffffff; --good:#2c7a57;
+  --display:"office-ca-mono","IBM Plex Sans",system-ui,sans-serif;
+  --body:"office-ca-mono",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"office-ca-mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#14181b; --panel:#1c2226; --chart:#252c31; --ink:#e7ebeb; --muted:#97a3a9; --line:#343d43;
+    --grid:#4d585e; --grid10:#d5dbdc; --accent:#f06a82; --accent-ink:#1d0b10; --good:#6cc79c; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14181b; --panel:#1c2226; --chart:#252c31; --ink:#e7ebeb; --muted:#97a3a9; --line:#343d43;
+  --grid:#4d585e; --grid10:#d5dbdc; --accent:#f06a82; --accent-ink:#1d0b10; --good:#6cc79c; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font:14px/1.45 var(--body);display:grid;grid-template-rows:auto minmax(0,1fr)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font:700 18px/1 var(--display);letter-spacing:-.01em;white-space:nowrap}
+.brand svg{width:22px;height:22px;color:var(--accent)}
+#name{flex:1 1 160px;min-width:120px;max-width:340px;font-weight:600;font-size:15px}
+.prog{flex:1 1 200px;display:flex;flex-direction:column;gap:4px;min-width:180px}
+.prog span{font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--good)}
+.hbtns{display:flex;gap:8px}
+
+input[type=text],input[type=number],select,textarea{background:var(--chart);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0}
+input[type=range]{accent-color:var(--accent);width:100%;min-width:0}
+.btn{background:var(--chart);border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled,.kbtn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sm{padding:3px 8px;font-size:12.5px}
+
+main{display:grid;grid-template-columns:312px minmax(0,1fr) 304px;min-height:0}
+.panel{background:var(--panel);overflow:auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:18px;min-height:0}
+.panel.l{border-right:1px solid var(--line)} .panel.r{border-left:1px solid var(--line)}
+section{display:flex;flex-direction:column;gap:9px}
+h2{margin:0;font:600 11.5px/1.2 var(--body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+fieldset{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:18px;min-width:0}
+fieldset:disabled{opacity:.55}
+.f{display:grid;grid-template-columns:104px minmax(0,1fr);align-items:center;gap:6px 10px}
+.f label{color:var(--muted);font-size:13px}
+.duo{display:flex;gap:6px;align-items:center}
+.duo input[type=number]{width:68px;flex:none}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+.out{font:12.5px/1.5 var(--mono);background:var(--paper);border-radius:6px;padding:8px 10px;font-variant-numeric:tabular-nums}
+.out b{font-weight:600}
+
+#drop{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;align-items:center;border:1.5px dashed var(--grid);border-radius:8px;padding:10px;cursor:pointer;background:var(--chart)}
+#drop.over{border-color:var(--accent)}
+#drop img{width:72px;height:72px;object-fit:cover;border-radius:4px;background:var(--paper);display:block}
+#drop strong{display:block}
+#file,#pfile{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.lock{display:flex;gap:8px;align-items:flex-start;background:var(--paper);border-radius:6px;padding:8px 10px;font-size:13px}
+.lock input{margin-top:3px;accent-color:var(--accent)}
+details summary{cursor:pointer;color:var(--muted);font-size:13px}
+textarea{width:100%;min-height:64px;font:12.5px var(--mono);margin:6px 0;resize:vertical}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+#saves{display:flex;flex-direction:column;gap:6px}
+.save{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:center;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--chart)}
+.save b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.save span{font:11.5px var(--mono);color:var(--muted)}
+
+.work{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-width:0;min-height:0}
+.tools{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--chart)}
+.seg button{border:0;background:none;padding:6px 11px;cursor:pointer;font-weight:500}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.zoom{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+.zoom input{width:110px}
+#view{overflow:auto;position:relative;background:var(--paper);min-height:0}
+#spacer{min-width:100%;min-height:100%}
+#cv{position:sticky;top:0;left:0;display:block;cursor:crosshair}
+.status{padding:6px 14px;border-top:1px solid var(--line);font:12px var(--mono);color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;min-height:30px;background:var(--panel)}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--paper);border:0;border-radius:99px;padding:3px 10px;font-size:12.5px;cursor:pointer}
+
+.khead{display:flex;justify-content:space-between;align-items:baseline}
+.khead span{font:12px var(--mono);color:var(--muted)}
+#key{display:flex;flex-direction:column;gap:3px}
+.krow{display:grid;grid-template-columns:26px 44px minmax(0,1fr) auto 24px 24px;gap:6px;align-items:center;padding:3px 4px;border-radius:6px;border:1px solid transparent}
+.krow.on{border-color:var(--accent);background:var(--chart)}
+.krow.done .knm b{text-decoration:line-through;text-decoration-color:var(--good)}
+.krow input[type=color]{width:26px;height:26px;padding:0;border:1px solid var(--line);border-radius:4px;background:none;cursor:pointer}
+.krow select{padding:3px 2px;font:14px var(--mono);text-align:center}
+.knm{border:0;background:none;text-align:left;padding:2px;cursor:pointer;min-width:0}
+.knm b{display:block;font:600 12.5px var(--mono);white-space:nowrap}
+.chip[hidden]{display:none}
+.knm span{display:block;font:11px var(--mono);color:var(--muted)}
+.kct{font:11.5px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.kbtn{border:1px solid var(--line);background:var(--chart);border-radius:4px;width:24px;height:24px;padding:0;cursor:pointer;line-height:1}
+.kbtn:hover:not(:disabled){border-color:var(--muted)}
+.add{display:flex;gap:8px;align-items:center}
+.add input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:4px;background:none}
+
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);padding:18px 20px;max-width:min(420px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+dialog p{margin:0 0 14px}
+#dlgBtns{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:8px;font-size:13px;max-width:calc(100vw - 32px);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+@media (prefers-reduced-motion: reduce){#toast{transition:none}}
+@media (max-width: 920px){
+  html,body{height:auto} body{display:block}
+  main{grid-template-columns:minmax(0,1fr)}
+  .panel{overflow:visible;border:0!important;border-bottom:1px solid var(--line)!important}
+  #view{height:72vh}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>Stitch!</div>
+  <input type="text" id="name" aria-label="Pattern name" maxlength="60">
+  <div class="prog"><span id="progTxt">0 stitched</span><div class="bar"><i id="progBar"></i></div></div>
+  <div class="hbtns">
+    <button class="btn" id="undo" type="button" disabled>Undo</button>
+    <button class="btn pri" id="btnSave" type="button">Save</button>
+  </div>
+</header>
+
+<main>
+  <div class="panel l">
+    <section>
+      <h2>Image</h2>
+      <label id="drop" for="file">
+        <img id="thumb" alt="">
+        <span><strong id="dropT">Upload an image</strong><span class="note" id="dropS">Click, or drop a photo here. PNG transparency becomes unstitched fabric.</span></span>
+      </label>
+      <input type="file" id="file" accept="image/*">
+      <label class="lock"><input type="checkbox" id="lock"><span><b>Lock pattern</b><br><span class="note" id="lockNote">Turns on by itself when you mark your first stitch, so a stray slider can't wipe your progress.</span></span></label>
+    </section>
+
+    <fieldset id="editFs">
+      <section>
+        <h2>Fabric and size</h2>
+        <div class="f">
+          <label for="fabric">Fabric</label>
+          <select id="fabric">
+            <option value="11">Aida 11 count</option><option value="14">Aida 14 count</option><option value="16">Aida 16 count</option>
+            <option value="18">Aida 18 count</option><option value="20">Aida 20 count</option><option value="22">Hardanger 22 count</option>
+            <option value="25/2">Evenweave 25, over two</option><option value="28/2">Evenweave 28, over two</option>
+            <option value="32/2">Linen 32, over two</option><option value="36/2">Linen 36, over two</option>
+          </select>
+          <label for="stW">Stitches wide</label>
+          <div class="duo"><input type="number" id="stW" min="8" max="300" step="1"><input type="range" id="stWr" min="8" max="300" step="1" aria-label="Stitches wide"></div>
+          <label for="finW">Finished width</label>
+          <div class="duo"><input type="number" id="finW" min="0.5" step="0.1"><select id="unit" aria-label="Unit"><option value="in">in</option><option value="cm">cm</option></select></div>
+          <label for="keep">Changing fabric</label>
+          <select id="keep"><option value="size">keeps the finished size</option><option value="st">keeps the stitch count</option></select>
+        </div>
+        <div class="out" id="sizeOut"></div>
+      </section>
+
+      <section>
+        <h2>Pixelation and dithering</h2>
+        <div class="f">
+          <label for="dither">Dithering</label>
+          <select id="dither"><option value="none">None (flat colour)</option><option value="fs">Floyd–Steinberg</option><option value="atk">Atkinson</option><option value="bayer">Ordered (Bayer)</option></select>
+          <label for="strength">Dither amount</label><input type="range" id="strength" min="0" max="100">
+          <label for="bri">Brightness</label><input type="range" id="bri" min="-100" max="100">
+          <label for="con">Contrast</label><input type="range" id="con" min="-100" max="100">
+          <label for="sat">Saturation</label><input type="range" id="sat" min="-100" max="100">
+        </div>
+        <div><button class="btn sm" type="button" id="resetAdj">Reset adjustments</button></div>
+      </section>
+
+      <section>
+        <h2>Palette</h2>
+        <div class="f">
+          <label for="palSource">Colours from</label>
+          <select id="palSource">
+            <option value="dmc">Image, matched to DMC floss</option>
+            <option value="auto">Image, exact colours</option>
+            <option value="custom">Custom (edit in the floss key)</option>
+            <option value="bw">Black and white</option>
+            <option value="gray6">Six greys</option>
+            <option value="redwork">Redwork</option>
+            <option value="delft">Delft blues</option>
+            <option value="gameboy">Game Boy greens</option>
+            <option value="pico8">PICO-8 (16)</option>
+          </select>
+          <label for="nCol">Max colours</label>
+          <div class="duo"><input type="number" id="nCol" min="2" max="60"><input type="range" id="nColr" min="2" max="60" aria-label="Max colours"></div>
+        </div>
+        <details>
+          <summary>Paste your own list of hex colours</summary>
+          <textarea id="hexIn" placeholder="#c72b3b, #fcfbf8, #253b73 …" aria-label="Hex colours"></textarea>
+          <button class="btn sm" type="button" id="hexApply">Use these colours</button>
+        </details>
+      </section>
+    </fieldset>
+
+    <section>
+      <h2>Save and load</h2>
+      <div class="row">
+        <button class="btn" type="button" id="btnSave2">Save in this browser</button>
+        <button class="btn" type="button" id="dlProj">Download project file</button>
+        <label class="btn" for="pfile" id="openLbl" tabindex="0">Open project file</label>
+        <input type="file" id="pfile" accept=".json,application/json">
+        <button class="btn" type="button" id="dlPng">Download chart as PNG</button>
+      </div>
+      <p class="note">Browser saves stay on this device and the browser can clear them. A project file holds the pattern, palette, symbols and every stitched mark, so keep one as a backup.</p>
+      <div id="saves"></div>
+    </section>
+  </div>
+
+  <div class="work">
+    <div class="tools">
+      <div class="seg" role="group" aria-label="Tool">
+        <button type="button" id="tMark" aria-pressed="true" title="Click or drag to mark stitches done">Mark stitches</button>
+        <button type="button" id="tFill" aria-pressed="false" title="Click to mark a whole connected block of one colour">Fill block</button>
+      </div>
+      <select id="mode" aria-label="Chart style"><option value="both">Colour and symbols</option><option value="sym">Symbols only</option><option value="col">Colour only</option></select>
+      <div class="zoom"><label for="zoom">Zoom</label><input type="range" id="zoom" min="2" max="40" step="1">
+        <button class="btn sm" type="button" id="fit">Fit</button>
+        <button class="btn sm" type="button" id="actual" title="One stitch on screen is about as large as on the fabric">Fabric size</button></div>
+      <button class="chip" type="button" id="hiChip" hidden></button>
+      <button class="btn sm" type="button" id="clearMarks">Clear marks</button>
+    </div>
+    <div id="view"><div id="spacer"><canvas id="cv"></canvas></div></div>
+    <div class="status"><span id="stPos">Hover a square to see its thread</span><span id="stHint">Bold lines every 10 stitches · red arrows mark the centre</span></div>
+  </div>
+
+  <div class="panel r">
+    <section>
+      <div class="khead"><h2>Floss key</h2><span id="kCount"></span></div>
+      <p class="note">Click a name to show only that colour. Change its swatch or symbol on the left; ✓ marks the whole colour stitched.</p>
+      <div id="key"></div>
+      <div class="add"><input type="color" id="newCol" value="#2f6f8f" aria-label="New colour"><button class="btn sm" type="button" id="addCol">Add colour</button></div>
+      <p class="note" id="dmcNote">DMC numbers are screen approximations. Check against real skeins before buying.</p>
+    </section>
+  </div>
+</main>
+
+<dialog id="dlg"><p id="dlgMsg"></p><div id="dlgBtns"></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- data ---------- */
+const DMC=("B5200,255,255,255;White,252,251,248;Ecru,240,234,218;310,0,0,0;150,171,2,73;151,240,206,212;152,226,160,153;153,230,204,217;154,87,36,51;155,152,145,182;156,163,174,209;157,187,195,217;158,76,82,110;159,199,202,215;160,153,159,183;161,120,128,164;162,219,236,245;163,77,131,97;164,200,216,184;165,239,244,164;166,192,200,64;167,167,124,73;168,209,209,209;169,132,132,132;208,131,91,139;209,163,123,167;210,195,159,195;211,227,203,227;221,136,62,67;223,204,132,124;224,235,183,175;225,255,223,213;300,111,47,0;301,179,95,43;304,183,31,51;307,253,237,84;309,186,74,74;311,28,80,102;312,53,102,139;315,129,73,82;316,183,115,127;317,108,108,108;318,171,171,171;319,32,95,46;320,105,136,90;321,199,43,59;322,90,143,184;326,179,59,75;327,99,54,102;333,92,84,120;334,115,159,193;335,238,84,110;336,37,59,115;340,173,167,199;341,183,191,221;347,191,45,45;349,210,16,53;350,224,72,72;351,233,106,103;352,253,156,151;353,254,215,204;355,152,68,54;356,197,106,91;367,97,122,82;368,166,194,152;369,215,237,204;370,184,157,100;371,191,166,113;372,204,183,132;400,143,67,15;402,247,167,119;407,187,129,97;413,86,86,86;414,140,140,140;415,211,211,214;420,160,112,66;422,198,159,123;433,122,69,31;434,152,94,51;435,184,119,72;436,203,144,81;437,228,187,142;444,255,214,0;445,255,251,139;451,145,123,115;452,192,179,174;453,215,206,203;469,114,132,60;470,148,171,79;471,174,191,121;472,216,228,152;498,167,19,43;500,4,77,51;501,57,111,82;502,91,144,113;503,123,172,148;504,196,222,204;517,59,118,143;518,79,147,167;519,126,177,200;520,102,109,79;522,150,158,126;523,171,177,151;524,196,205,172;535,99,100,88;543,242,227,206;550,92,24,78;552,128,58,107;553,163,99,139;554,219,179,203;561,44,106,69;562,83,151,106;563,143,192,152;564,167,205,175;580,136,141,51;581,167,174,56;597,91,163,179;598,144,195,204;600,205,47,99;601,209,40,106;602,226,72,116;603,255,164,190;604,255,176,190;605,255,192,205;606,250,50,3;608,253,93,53;610,121,96,71;611,150,118,86;612,188,154,120;613,220,196,170;632,135,85,57;640,133,123,97;642,164,152,120;644,221,216,203;645,110,101,92;646,135,125,115;647,176,166,156;648,188,180,172;666,227,29,66;676,229,206,151;677,245,236,203;680,188,141,14;699,5,101,23;700,7,115,27;701,63,143,41;702,71,167,47;703,123,181,71;704,158,207,52;712,255,251,239;718,156,36,98;720,229,92,31;721,242,120,66;722,247,151,111;725,255,200,64;726,253,215,85;727,255,241,175;729,208,165,62;730,130,123,48;732,148,140,54;733,188,179,76;734,199,192,119;738,236,204,158;739,248,228,200;740,255,139,0;741,255,163,43;742,255,191,87;743,254,211,118;744,255,231,147;745,255,233,173;746,252,252,238;754,247,203,191;758,238,170,155;760,245,173,173;761,255,201,201;762,236,236,236;772,228,236,212;775,217,235,241;776,252,176,185;778,223,179,187;780,148,99,26;781,162,109,32;782,174,119,32;783,206,145,36;791,70,69,99;792,85,91,123;793,112,125,162;794,143,156,193;796,17,65,109;797,19,71,125;798,70,106,142;799,116,142,182;800,192,204,222;801,101,57,25;803,44,89,124;806,61,149,165;807,100,171,186;809,148,168,198;813,161,194,215;814,123,0,27;815,135,7,31;816,151,11,35;817,187,5,31;818,255,223,217;819,255,238,235;820,14,54,92;822,231,226,211;823,33,48,99;824,57,105,135;825,71,129,165;826,107,158,191;827,189,221,237;828,197,232,237;829,126,107,66;830,141,120,75;831,170,143,86;832,189,155,81;833,200,171,108;834,219,190,127;838,89,73,55;839,103,85,65;840,154,124,92;841,182,155,126;842,209,186,161;844,72,72,72;869,131,94,57;890,23,73,35;891,255,87,115;892,255,121,140;893,252,144,162;894,255,178,187;895,27,83,0;898,73,42,19;899,242,118,136;900,209,88,7;902,130,38,55;904,85,120,34;905,98,138,40;906,127,179,53;907,199,230,102;909,21,111,73;910,24,126,86;911,24,144,101;912,27,157,107;913,109,171,119;915,130,0,67;917,155,19,89;918,130,52,10;919,166,69,16;920,172,84,20;921,198,98,24;922,226,115,35;924,86,106,106;926,152,174,174;927,189,203,203;928,221,227,227;930,69,92,113;931,106,133,158;932,162,181,198;934,49,57,25;935,66,77,33;936,76,88,38;937,98,113,51;938,54,31,14;939,27,40,83;943,61,147,132;945,251,213,187;946,235,99,7;947,255,123,77;948,254,231,218;950,238,211,196;951,255,226,207;954,136,186,145;955,162,214,173;956,255,145,145;957,253,181,181;958,62,182,161;959,89,199,180;961,207,115,115;962,230,138,138;963,255,215,215;964,169,226,216;966,185,215,192;970,247,139,19;971,246,127,0;972,255,181,21;973,255,227,0;975,145,79,18;976,194,129,66;977,220,156,86;986,64,82,48;987,88,113,65;988,115,139,91;989,141,166,117;991,71,123,110;992,111,174,159;993,144,192,180;995,38,150,182;996,48,194,236;3011,137,138,88;3012,166,167,93;3013,185,185,130;3021,79,75,65;3022,142,144,120;3023,177,170,151;3024,235,234,231;3031,75,60,42;3032,179,159,139;3033,227,216,204;3041,149,111,124;3042,183,157,167;3045,188,150,106;3046,216,188,154;3047,231,214,193;3051,95,102,72;3052,136,146,104;3053,156,164,130;3064,196,142,112;3072,230,232,232;3078,253,249,205;3325,184,210,230;3326,251,173,180;3328,227,109,109;3340,255,131,111;3341,252,171,152;3345,27,89,21;3346,64,106,58;3347,113,147,92;3348,204,217,177;3350,188,67,101;3354,228,166,172;3362,94,107,71;3363,114,130,86;3364,131,151,95;3371,30,17,8;3607,197,73,137;3608,234,156,196;3609,244,174,213;3685,136,21,49;3687,201,107,112;3688,231,169,172;3689,251,191,194;3705,255,121,146;3706,255,173,188;3708,255,203,213;3712,241,135,135;3713,255,226,226;3721,161,75,81;3722,188,108,100;3726,155,91,102;3727,219,169,178;3731,218,103,131;3733,232,135,155;3740,120,87,98;3743,215,203,211;3746,119,107,152;3747,211,215,237;3750,56,76,94;3752,199,209,219;3753,219,226,233;3755,147,180,206;3756,238,252,252;3760,62,133,162;3765,52,127,140;3766,153,207,217;3768,101,127,127;3770,255,238,227;3772,160,108,80;3773,182,117,82;3774,243,225,215;3776,207,121,57;3777,134,48,34;3778,217,137,120;3779,248,202,200;3781,107,87,67;3782,210,188,166;3787,98,93,80;3790,127,106,85;3799,66,66,66;3801,231,73,103;3802,113,65,73;3803,171,51,87;3804,224,40,118;3805,243,71,139;3806,255,140,174;3807,96,103,140;3808,54,105,112;3809,63,124,133;3810,72,142,154;3811,188,227,230;3812,47,140,132;3813,178,212,189;3814,80,139,125;3815,71,119,89;3816,101,165,125;3817,153,195,170;3818,17,90,59;3819,224,232,104;3820,223,182,95;3821,230,193,104;3822,246,220,152;3823,255,253,227;3824,254,205,194;3825,253,189,150;3826,173,114,57;3827,247,187,119;3828,183,139,97;3829,169,130,4;3830,185,85,68;3831,179,47,72;3832,219,85,110;3833,234,134,153;3834,114,55,93;3835,148,96,131;3836,186,145,170;3837,108,58,110;3838,92,114,148;3839,123,142,171;3840,176,192,218;3841,205,223,237;3842,50,102,124;3843,20,170,208;3844,18,174,186;3845,4,196,202;3846,6,227,230;3847,52,125,117;3848,85,147,146;3849,82,179,164;3850,55,132,119;3851,73,179,161;3852,205,157,55;3853,242,151,70;3854,242,175,104;3855,250,211,150;3856,255,211,181;3857,104,37,26;3858,150,74,63;3859,186,139,124;3860,125,93,87;3861,166,136,129;3862,138,110,78;3863,164,131,92;3864,203,182,156;3865,249,247,241;3866,250,246,240")
+  .split(';').map(s=>{const a=s.split(',');return{code:a[0],rgb:[+a[1],+a[2],+a[3]]}});
+const hx=s=>s.match(/[0-9a-f]{6}/gi).map(h=>[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]);
+const PRESETS={
+  bw:hx('000000 ffffff'), gray6:hx('000000 333333 666666 999999 cccccc ffffff'),
+  redwork:hx('fcfbf8 c72b3b 87071f'), delft:hx('fcfbf8 c0ccde 748eb6 466a8e 0e365c'),
+  gameboy:hx('0f380f 306230 8bac0f 9bbc0f'),
+  pico8:hx('000000 1d2b53 7e2553 008751 ab5236 5f574f c2c3c7 fff1e8 ff004d ffa300 ffec27 00e436 29adff 83769c ff77a8 ffccaa')
+};
+const SYMS=[...'●■▲◆★✚✖○□△◇☆♥♣♠♦▼◀▶◐◑◒◓⊕⊗⊙≡∥∞#%&@$+=~/\\<>^*?!ABCDEFGHJKLMNPQRSTUVWXYZ23456789'];
+const OPT=SYMS.map(s=>'<option>'+esc(s)+'</option>').join('');
+const BAYER=[0,32,8,40,2,34,10,42,48,16,56,24,50,18,58,26,12,44,4,36,14,46,6,38,60,28,52,20,62,30,54,22,3,35,11,43,1,33,9,41,51,19,59,27,49,17,57,25,15,47,7,39,13,45,5,37,63,31,55,23,61,29,53,21];
+const RUL=30;
+
+/* ---------- state ---------- */
+const S={name:'Untitled pattern',w:80,h:80,fabric:'14',unit:'in',keep:'size',finIn:80/14,
+  dither:'fs',strength:70,bri:0,con:0,sat:0,palSource:'dmc',nColors:16,custom:false,
+  palette:[],cells:new Uint8Array(0),done:new Uint8Array(0),locked:false,mode:'both',cs:12,hi:-1,tool:'mark'};
+let src=null,srcData=null,PX=null,AL=null,TC=[],DC=[],total=0,doneTotal=0,undo=[],hover=-1,T={};
+const view=$('view'),cv=$('cv'),spacer=$('spacer');
+
+/* ---------- colour maths ---------- */
+const LIN=new Float32Array(256);for(let i=0;i<256;i++){const c=i/255;LIN[i]=c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4)}
+function lab(r,g,b){const R=LIN[r],G=LIN[g],B=LIN[b];
+  const l=Math.cbrt(.4122214708*R+.5363325363*G+.0514459929*B),m=Math.cbrt(.2119034982*R+.6806995451*G+.1073969566*B),s=Math.cbrt(.0883024619*R+.2817188376*G+.6299787005*B);
+  return[.2104542553*l+.793617785*m-.0040720468*s,1.9779984951*l-2.428592205*m+.4505937099*s,.0259040371*l+.7827717662*m-.808675766*s]}
+function makeNearest(cols){const n=cols.length,L=new Float32Array(n*3);cols.forEach((c,i)=>L.set(lab(c[0],c[1],c[2]),i*3));
+  const cache=new Int16Array(262144).fill(-1);
+  return(r,g,b)=>{r=r<0?0:r>255?255:r|0;g=g<0?0:g>255?255:g|0;b=b<0?0:b>255?255:b|0;
+    const k=(r>>2)<<12|(g>>2)<<6|(b>>2);let c=cache[k];if(c>=0)return c;
+    const q=lab((r&252)|2,(g&252)|2,(b&252)|2);let bd=1e9;
+    for(let i=0;i<n;i++){const a=L[i*3]-q[0],e=L[i*3+1]-q[1],f=L[i*3+2]-q[2],d=a*a+e*e+f*f;if(d<bd){bd=d;c=i}}
+    return cache[k]=c}}
+const dmcNear=makeNearest(DMC.map(d=>d.rgb));
+const toHex=p=>'#'+[p.r,p.g,p.b].map(v=>v.toString(16).padStart(2,'0')).join('');
+const fabricCount=()=>{const a=S.fabric.split('/');return a[0]/(a[1]||1)};
+
+/* ---------- image → pattern ---------- */
+function resample(){const{w,h}=S,k=clamp(Math.floor(src.width/w),1,6),W=w*k,H=h*k;
+  const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d',{willReadFrequently:true});
+  x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(src,0,0,W,H);
+  const d=x.getImageData(0,0,W,H).data,n=w*h;PX=new Float32Array(n*3);AL=new Uint8Array(n);
+  const cc=S.con*1.27,cf=(259*(cc+255))/(255*(259-cc)),br=S.bri*1.27,sf=1+S.sat/100;
+  for(let y=0;y<h;y++)for(let X=0;X<w;X++){let r=0,g=0,b=0,a=0;
+    for(let j=0;j<k;j++){let p=((y*k+j)*W+X*k)*4;for(let i=0;i<k;i++,p+=4){const al=d[p+3];r+=d[p]*al;g+=d[p+1]*al;b+=d[p+2]*al;a+=al}}
+    const i=y*w+X;if(a/(k*k)<128)continue;AL[i]=1;r/=a;g/=a;b/=a;
+    r=cf*(r-128)+128+br;g=cf*(g-128)+128+br;b=cf*(b-128)+128+br;
+    const l=.299*r+.587*g+.114*b;PX[i*3]=clamp(l+(r-l)*sf,0,255);PX[i*3+1]=clamp(l+(g-l)*sf,0,255);PX[i*3+2]=clamp(l+(b-l)*sf,0,255)}}
+
+function kmeans(n){const idx=[];for(let i=0;i<AL.length;i++)if(AL[i])idx.push(i);
+  if(!idx.length)return[[128,128,128]];
+  const step=Math.max(1,Math.floor(idx.length/15000)),m=Math.floor(idx.length/step),R=new Float32Array(m*3),L=new Float32Array(m*3);
+  const mean=[0,0,0];
+  for(let j=0;j<m;j++){const i=idx[j*step]*3;R[j*3]=PX[i];R[j*3+1]=PX[i+1];R[j*3+2]=PX[i+2];
+    const q=lab(PX[i]|0,PX[i+1]|0,PX[i+2]|0);L.set(q,j*3);mean[0]+=q[0]/m;mean[1]+=q[1]/m;mean[2]+=q[2]/m}
+  const C=[],dist=new Float32Array(m).fill(1e9);let cur=mean;
+  for(let k=0;k<n;k++){C.push(cur);let far=0,fd=-1;
+    for(let j=0;j<m;j++){const a=L[j*3]-cur[0],e=L[j*3+1]-cur[1],f=L[j*3+2]-cur[2],d=a*a+e*e+f*f;if(d<dist[j])dist[j]=d;if(dist[j]>fd){fd=dist[j];far=j}}
+    if(fd<1e-7)break;cur=[L[far*3],L[far*3+1],L[far*3+2]]}
+  const K=C.length;let rgb,cnt;
+  for(let it=0;it<9;it++){const sl=new Float64Array(K*3);rgb=new Float64Array(K*3);cnt=new Uint32Array(K);
+    for(let j=0;j<m;j++){let bd=1e9,bc=0;for(let k=0;k<K;k++){const c=C[k],a=L[j*3]-c[0],e=L[j*3+1]-c[1],f=L[j*3+2]-c[2],d=a*a+e*e+f*f;if(d<bd){bd=d;bc=k}}
+      cnt[bc]++;for(let t=0;t<3;t++){sl[bc*3+t]+=L[j*3+t];rgb[bc*3+t]+=R[j*3+t]}}
+    for(let k=0;k<K;k++)if(cnt[k])C[k]=[sl[k*3]/cnt[k],sl[k*3+1]/cnt[k],sl[k*3+2]/cnt[k]]}
+  const out=[],seen=new Set();
+  for(let k=0;k<K;k++)if(cnt[k]){const c=[0,1,2].map(t=>Math.round(rgb[k*3+t]/cnt[k])),key=c.join();if(!seen.has(key)){seen.add(key);out.push(c)}}
+  return out.sort((a,b)=>(.299*b[0]+.587*b[1]+.114*b[2])-(.299*a[0]+.587*a[1]+.114*a[2]))}
+
+function buildPalette(){let cols,codes=[];
+  if(PRESETS[S.palSource])cols=PRESETS[S.palSource];
+  else{cols=kmeans(S.nColors);
+    if(S.palSource==='dmc'){const seen=new Set(),o=[];for(const c of cols){const d=dmcNear(c[0],c[1],c[2]);if(!seen.has(d)){seen.add(d);o.push(DMC[d])}}
+      cols=o.map(d=>d.rgb);codes=o.map(d=>'DMC '+d.code)}}
+  S.palette=cols.map((c,i)=>({r:c[0],g:c[1],b:c[2],sym:SYMS[i%SYMS.length],code:codes[i]||null}));S.hi=-1}
+
+function mapCells(){const{w,h}=S,n=w*h,P=S.palette,near=makeNearest(P.map(p=>[p.r,p.g,p.b])),cells=new Uint8Array(n).fill(255),k=S.strength/100;
+  if(S.dither==='none'||S.dither==='bayer'){const sp=S.dither==='bayer'?255/Math.cbrt(P.length)*k:0;
+    for(let i=0;i<n;i++){if(!AL[i])continue;const t=sp?(BAYER[((i/w|0)&7)*8+(i%w&7)]/64-.5)*sp:0;cells[i]=near(PX[i*3]+t,PX[i*3+1]+t,PX[i*3+2]+t)}}
+  else{const buf=Float32Array.from(PX),ker=S.dither==='fs'?[[1,0,7/16],[-1,1,3/16],[0,1,5/16],[1,1,1/16]]:[[1,0,.125],[2,0,.125],[-1,1,.125],[0,1,.125],[1,1,.125],[0,2,.125]];
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!AL[i])continue;
+      const r=clamp(buf[i*3],0,255),g=clamp(buf[i*3+1],0,255),b=clamp(buf[i*3+2],0,255),c=near(r,g,b),p=P[c];cells[i]=c;
+      const er=(r-p.r)*k,eg=(g-p.g)*k,eb=(b-p.b)*k;
+      for(const[dx,dy,wt]of ker){const X=x+dx,Y=y+dy;if(X<0||X>=w||Y>=h)continue;const j=(Y*w+X)*3;buf[j]+=er*wt;buf[j+1]+=eg*wt;buf[j+2]+=eb*wt}}}
+  S.cells=cells}
+
+let pend=false;
+function reprocess(){if(pend)return;pend=true;requestAnimationFrame(()=>{pend=false;process()})}
+function process(){if(!src)return;resample();if(!S.custom)buildPalette();finish()}
+function repalette(){if(!src)return;if(!PX||PX.length!==S.w*S.h*3)resample();finish()}
+function finish(){mapCells();if(S.done.length!==S.w*S.h){S.done=new Uint8Array(S.w*S.h);undo=[]}
+  derive();recount();renderKey();layout();draw();syncSize();autosave()}
+
+/* ---------- derived ---------- */
+function readTheme(){const cs=getComputedStyle(document.documentElement),g=n=>cs.getPropertyValue(n).trim();
+  T={bg:g('--paper'),chart:g('--chart'),grid:g('--grid'),grid10:g('--grid10'),ink:g('--ink'),muted:g('--muted'),accent:g('--accent'),good:g('--good')}}
+const LIGHT={bg:'#ffffff',chart:'#ffffff',grid:'#a9b1b2',grid10:'#1b2126',ink:'#1b2126',muted:'#5d6970',accent:'#b0203a',good:'#2c7a57'};
+function derive(th){th=th||T;const ch=hx(th.chart)[0],mix=(a,b)=>Math.round(a*.26+b*.74);
+  for(const p of S.palette){p.css=`rgb(${p.r},${p.g},${p.b})`;p.ink=(.299*p.r+.587*p.g+.114*p.b)>140?'#000':'#fff';p.fade=`rgb(${mix(p.r,ch[0])},${mix(p.g,ch[1])},${mix(p.b,ch[2])})`}}
+function recount(){const n=S.palette.length;TC=new Array(n).fill(0);DC=new Array(n).fill(0);total=0;doneTotal=0;
+  for(let i=0;i<S.cells.length;i++){const c=S.cells[i];if(c===255){S.done[i]=0;continue}TC[c]++;total++;if(S.done[i]){DC[c]++;doneTotal++}}}
+
+/* ---------- drawing ---------- */
+function paint(ctx,o){const{w,h,cells,done}=S,P=S.palette,{cs,ox,oy,vw,vh,th}=o;
+  ctx.fillStyle=th.bg;ctx.fillRect(0,0,vw,vh);
+  const c0=Math.max(0,Math.floor(ox/cs)),c1=Math.min(w,Math.ceil((ox+vw-RUL)/cs)),r0=Math.max(0,Math.floor(oy/cs)),r1=Math.min(h,Math.ceil((oy+vh-RUL)/cs));
+  ctx.save();ctx.beginPath();ctx.rect(RUL,RUL,vw-RUL,vh-RUL);ctx.clip();ctx.translate(RUL-ox,RUL-oy);
+  ctx.fillStyle=th.chart;ctx.fillRect(0,0,w*cs,h*cs);
+  const showCol=S.mode!=='sym',showSym=S.mode!=='col'&&cs>=8,hi=o.hi;
+  ctx.font=`${Math.round(cs*.7)}px "IBM Plex Mono","Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2","DejaVu Sans",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.lineWidth=Math.max(1,cs/10);ctx.strokeStyle=th.muted;
+  for(let r=r0;r<r1;r++)for(let c=c0;c<c1;c++){const i=r*w+c,ci=cells[i];if(ci===255)continue;const p=P[ci],dn=done[i],x=c*cs,y=r*cs;
+    ctx.globalAlpha=hi>=0&&ci!==hi?.13:1;
+    if(showCol){ctx.fillStyle=dn?p.fade:p.css;ctx.fillRect(x,y,cs,cs)}
+    if(dn){if(cs>=5){ctx.beginPath();ctx.moveTo(x+cs*.22,y+cs*.78);ctx.lineTo(x+cs*.78,y+cs*.22);ctx.stroke()}}
+    else if(showSym){ctx.fillStyle=showCol?p.ink:th.ink;ctx.fillText(p.sym,x+cs/2,y+cs/2+cs*.05)}}
+  ctx.globalAlpha=1;
+  if(cs>=4){ctx.strokeStyle=th.grid;ctx.lineWidth=1;ctx.beginPath();
+    for(let c=c0;c<=c1;c++)if(c%10){const x=Math.round(c*cs)+.5;ctx.moveTo(x,r0*cs);ctx.lineTo(x,r1*cs)}
+    for(let r=r0;r<=r1;r++)if(r%10){const y=Math.round(r*cs)+.5;ctx.moveTo(c0*cs,y);ctx.lineTo(c1*cs,y)}ctx.stroke()}
+  ctx.strokeStyle=th.grid10;ctx.lineWidth=cs>=9?2:1;ctx.beginPath();
+  for(let c=c0;c<=c1;c++)if(c%10===0||c===w){const x=Math.round(c*cs);ctx.moveTo(x,r0*cs);ctx.lineTo(x,r1*cs)}
+  for(let r=r0;r<=r1;r++)if(r%10===0||r===h){const y=Math.round(r*cs);ctx.moveTo(c0*cs,y);ctx.lineTo(c1*cs,y)}ctx.stroke();
+  if(o.hover>=0){ctx.strokeStyle=th.accent;ctx.lineWidth=2;ctx.strokeRect((o.hover%w)*cs,(o.hover/w|0)*cs,cs,cs)}
+  ctx.restore();
+  // rulers
+  ctx.fillStyle=th.bg;ctx.fillRect(0,0,vw,RUL);ctx.fillRect(0,0,RUL,vh);
+  ctx.fillStyle=th.muted;ctx.font='10px "IBM Plex Mono",monospace';ctx.textBaseline='middle';
+  const st=cs*10>=26?10:cs*20>=26?20:50;
+  ctx.textAlign='center';for(let c=Math.ceil(c0/st)*st;c<=c1;c+=st)if(c){const x=RUL+c*cs-ox;if(x>=RUL-2)ctx.fillText(c,x,RUL-11)}
+  ctx.textAlign='right';for(let r=Math.ceil(r0/st)*st;r<=r1;r+=st)if(r){const y=RUL+r*cs-oy;if(y>=RUL-2)ctx.fillText(r,RUL-5,y)}
+  ctx.fillStyle=th.accent;const mx=RUL+w/2*cs-ox,my=RUL+h/2*cs-oy;
+  if(mx>=RUL){ctx.beginPath();ctx.moveTo(mx-4,RUL-6);ctx.lineTo(mx+4,RUL-6);ctx.lineTo(mx,RUL-1);ctx.fill()}
+  if(my>=RUL){ctx.beginPath();ctx.moveTo(RUL-6,my-4);ctx.lineTo(RUL-6,my+4);ctx.lineTo(RUL-1,my);ctx.fill()}
+  ctx.fillStyle=th.bg;ctx.fillRect(0,0,RUL,RUL)}
+
+let dq=false;
+function draw(){if(dq)return;dq=true;requestAnimationFrame(()=>{dq=false;
+  const dpr=window.devicePixelRatio||1,vw=view.clientWidth,vh=view.clientHeight;if(!vw||!vh)return;
+  const W=Math.round(vw*dpr),H=Math.round(vh*dpr);if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;cv.style.width=vw+'px';cv.style.height=vh+'px'}
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  paint(ctx,{cs:S.cs,ox:view.scrollLeft,oy:view.scrollTop,vw,vh,th:T,hi:S.hi,hover})})}
+function layout(){spacer.style.width=(RUL+S.w*S.cs+16)+'px';spacer.style.height=(RUL+S.h*S.cs+16)+'px';$('zoom').value=S.cs}
+function setZoom(cs){cs=clamp(Math.round(cs),2,40);const fx=(view.scrollLeft+view.clientWidth/2-RUL)/S.cs,fy=(view.scrollTop+view.clientHeight/2-RUL)/S.cs;
+  S.cs=cs;layout();view.scrollLeft=fx*cs+RUL-view.clientWidth/2;view.scrollTop=fy*cs+RUL-view.clientHeight/2;draw()}
+function fit(){setZoom(Math.floor(Math.min((view.clientWidth-RUL-18)/S.w,(view.clientHeight-RUL-18)/S.h)))}
+
+/* ---------- floss key ---------- */
+function renderKey(){const lock=S.locked||!src,key=$('key');key.innerHTML='';
+  S.palette.forEach((p,i)=>{const row=document.createElement('div');row.className='krow';row.id='kr'+i;const hex=toHex(p);
+    const sub=p.code?hex:'≈ DMC '+DMC[dmcNear(p.r,p.g,p.b)].code;
+    row.innerHTML=`<input type="color" id="kc${i}" value="${hex}" aria-label="Colour ${i+1}"${lock?' disabled':''}><select id="ks${i}" aria-label="Symbol for colour ${i+1}">${OPT}</select><button class="knm" type="button" title="Show only this colour"><b>${esc(p.code||hex)}</b><span>${esc(sub)}</span></button><span class="kct" id="kn${i}"></span><button class="kbtn" type="button" title="Mark every stitch of this colour done, or undo that" aria-label="Mark all of colour ${i+1}">✓</button><button class="kbtn" type="button" title="Remove this colour" aria-label="Remove colour ${i+1}"${lock||S.palette.length<=2?' disabled':''}>×</button>`;
+    const[ci,ss,nm,,ball,bdel]=row.children;ss.value=p.sym;
+    ci.addEventListener('change',()=>{const c=hx(ci.value)[0];Object.assign(p,{r:c[0],g:c[1],b:c[2],code:null});goCustom();repalette()});
+    ss.addEventListener('change',()=>{p.sym=ss.value;draw();autosave()});
+    nm.addEventListener('click',()=>setHi(S.hi===i?-1:i));
+    ball.addEventListener('click',()=>markColour(i));
+    bdel.addEventListener('click',()=>{S.palette.splice(i,1);S.hi=-1;goCustom();repalette()});
+    key.appendChild(row)});
+  $('kCount').textContent=S.palette.length+' colours';$('addCol').disabled=$('newCol').disabled=lock||S.palette.length>=64;
+  setHi(S.hi,true);updateCounts()}
+function goCustom(){S.custom=true;S.palSource='custom';$('palSource').value='custom'}
+function setHi(i,quiet){S.hi=i;S.palette.forEach((_,k)=>{const r=$('kr'+k);if(r)r.classList.toggle('on',k===i)});
+  const chip=$('hiChip');chip.hidden=i<0;if(i>=0){const p=S.palette[i];chip.textContent='Showing only '+(p.code||toHex(p))+' '+p.sym+'  ✕'}
+  if(!quiet)draw()}
+let uq=false;
+function updateCounts(){if(uq)return;uq=true;requestAnimationFrame(()=>{uq=false;
+  S.palette.forEach((_,i)=>{const e=$('kn'+i);if(e){e.textContent=TC[i]?DC[i]+'/'+TC[i]:'unused';$('kr'+i).classList.toggle('done',TC[i]>0&&DC[i]===TC[i])}});
+  const pct=total?doneTotal/total*100:0;
+  $('progTxt').textContent=`${doneTotal.toLocaleString()} of ${total.toLocaleString()} stitched · ${pct>0&&pct<1?'<1':Math.floor(pct)}%`;
+  $('progBar').style.width=pct+'%';$('undo').disabled=!undo.length})}
+
+/* ---------- stitch marking ---------- */
+function setDone(i,v,ch){if(S.cells[i]===255||S.done[i]===v)return;S.done[i]=v;const c=S.cells[i];DC[c]+=v?1:-1;doneTotal+=v?1:-1;ch.push(i)}
+function commit(val,ch){if(!ch.length)return;undo.push({val,ch});if(undo.length>200)undo.shift();
+  if(!S.locked&&doneTotal>0){S.locked=true;syncLock();renderKey()}updateCounts();draw();autosave()}
+function doUndo(){const u=undo.pop();if(!u)return;const t=[];for(const i of u.ch)setDone(i,1-u.val,t);updateCounts();draw();autosave()}
+function flood(i){const{w,h,cells}=S,c=cells[i],val=S.done[i]?0:1,seen=new Uint8Array(w*h),st=[i],ch=[];seen[i]=1;
+  while(st.length){const k=st.pop();setDone(k,val,ch);const x=k%w,y=k/w|0;
+    for(const j of[x>0?k-1:-1,x<w-1?k+1:-1,y>0?k-w:-1,y<h-1?k+w:-1])if(j>=0&&!seen[j]&&cells[j]===c){seen[j]=1;st.push(j)}}
+  commit(val,ch)}
+function markColour(ci){if(!TC[ci])return;const val=DC[ci]<TC[ci]?1:0,ch=[];for(let i=0;i<S.cells.length;i++)if(S.cells[i]===ci)setDone(i,val,ch);commit(val,ch)}
+function cellAt(e){const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(x<RUL||y<RUL)return-1;
+  const c=Math.floor((x-RUL+view.scrollLeft)/S.cs),R=Math.floor((y-RUL+view.scrollTop)/S.cs);return c<0||R<0||c>=S.w||R>=S.h?-1:R*S.w+c}
+let stroke=null,tap=null;
+cv.addEventListener('pointerdown',e=>{const i=cellAt(e);if(i<0||S.cells[i]===255)return;
+  if(e.pointerType==='touch'){tap={i,x:e.clientX,y:e.clientY};return}
+  if(e.button!==0)return;e.preventDefault();
+  if(S.tool==='fill'){flood(i);return}
+  stroke={val:S.done[i]?0:1,ch:[],last:i};setDone(i,stroke.val,stroke.ch);try{cv.setPointerCapture(e.pointerId)}catch(_){ }updateCounts();draw()});
+cv.addEventListener('pointermove',e=>{const i=cellAt(e);
+  if(stroke&&i>=0&&i!==stroke.last){const w=S.w,x0=stroke.last%w,y0=stroke.last/w|0,x1=i%w,y1=i/w|0,n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0));
+    for(let s=1;s<=n;s++)setDone(Math.round(y0+(y1-y0)*s/n)*w+Math.round(x0+(x1-x0)*s/n),stroke.val,stroke.ch);stroke.last=i;updateCounts()}
+  if(i!==hover){hover=i;status();draw()}});
+function endStroke(){if(stroke){const s=stroke;stroke=null;commit(s.val,s.ch)}}
+cv.addEventListener('pointerup',e=>{endStroke();
+  if(tap){const t=tap;tap=null;if(Math.hypot(e.clientX-t.x,e.clientY-t.y)<10){if(S.tool==='fill')flood(t.i);else{const ch=[],v=S.done[t.i]?0:1;setDone(t.i,v,ch);commit(v,ch)}}}});
+cv.addEventListener('pointercancel',()=>{tap=null;endStroke()});
+cv.addEventListener('pointerleave',()=>{if(hover>=0){hover=-1;status();draw()}});
+function status(){const el=$('stPos');if(hover<0){el.textContent='Hover a square to see its thread';return}
+  const c=S.cells[hover],x=hover%S.w+1,y=(hover/S.w|0)+1;
+  el.textContent=`Column ${x} · Row ${y} · `+(c===255?'no stitch':`${S.palette[c].code||toHex(S.palette[c])} ${S.palette[c].sym}`+(S.done[hover]?' · stitched':''))}
+
+/* ---------- UI sync ---------- */
+function syncSize(){const ct=fabricCount(),wi=S.w/ct,hi=S.h/ct,f=v=>v.toFixed(1);
+  $('stW').value=$('stWr').value=S.w;if(document.activeElement!==$('finW'))$('finW').value=+(S.unit==='in'?wi:wi*2.54).toFixed(S.unit==='in'?2:1);
+  $('sizeOut').innerHTML=`<b>${S.w} × ${S.h}</b> stitches · ${(S.w*S.h).toLocaleString()} squares<br>Finished <b>${f(wi)} × ${f(hi)} in</b> (${f(wi*2.54)} × ${f(hi*2.54)} cm)<br>Cut fabric ${f(wi+6)} × ${f(hi+6)} in for a 3 in margin`}
+function syncLock(){$('lock').checked=S.locked;$('editFs').disabled=S.locked||!src;
+  $('lockNote').textContent=!src?'This project has no source image, so its size and colours are fixed. Marking stitches still works.':S.locked?'Size, dithering and palette are frozen so your stitched marks stay put. Untick to edit the pattern.':"Turns on by itself when you mark your first stitch, so a stray slider can't wipe your progress."}
+function syncUI(){$('name').value=S.name;if(![...$('fabric').options].some(o=>o.value===S.fabric))S.fabric='14';
+  for(const k of['fabric','unit','keep','dither','strength','bri','con','sat','palSource','mode'])$(k).value=S[k];
+  $('nCol').value=$('nColr').value=S.nColors;$('tMark').setAttribute('aria-pressed',S.tool==='mark');$('tFill').setAttribute('aria-pressed',S.tool==='fill');
+  syncSize();syncLock()}
+function setW(w){const ratio=src?src.height/src.width:S.h/S.w,maxW=Math.min(300,Math.floor(400/ratio));
+  S.w=clamp(Math.round(w)||8,8,Math.max(8,maxW));S.h=Math.max(1,Math.round(S.w*ratio))}
+
+$('stW').addEventListener('change',e=>{setW(+e.target.value);S.finIn=S.w/fabricCount();reprocess()});
+$('stWr').addEventListener('input',e=>{setW(+e.target.value);S.finIn=S.w/fabricCount();reprocess()});
+$('finW').addEventListener('change',e=>{const v=+e.target.value;if(!(v>0))return;S.finIn=S.unit==='in'?v:v/2.54;setW(S.finIn*fabricCount());reprocess()});
+$('unit').addEventListener('change',e=>{S.unit=e.target.value;syncSize();autosave()});
+$('keep').addEventListener('change',e=>{S.keep=e.target.value;autosave()});
+$('fabric').addEventListener('change',e=>{S.fabric=e.target.value;if(S.keep==='size'){setW(S.finIn*fabricCount());reprocess()}else{S.finIn=S.w/fabricCount();syncSize();autosave()}});
+for(const k of['strength','bri','con','sat'])$(k).addEventListener('input',e=>{S[k]=+e.target.value;reprocess()});
+$('dither').addEventListener('change',e=>{S.dither=e.target.value;reprocess()});
+$('resetAdj').addEventListener('click',()=>{S.bri=S.con=S.sat=0;S.strength=70;syncUI();reprocess()});
+$('palSource').addEventListener('change',e=>{S.palSource=e.target.value;S.custom=S.palSource==='custom';reprocess()});
+const nc=e=>{S.nColors=clamp(Math.round(+e.target.value)||2,2,60);$('nCol').value=$('nColr').value=S.nColors;if(S.custom||PRESETS[S.palSource]){S.custom=false;S.palSource='dmc';$('palSource').value='dmc'}reprocess()};
+$('nCol').addEventListener('change',nc);$('nColr').addEventListener('input',nc);
+$('hexApply').addEventListener('click',()=>{const m=$('hexIn').value.match(/[0-9a-f]{6}/gi);if(!m||m.length<2){toast('Paste at least two six-digit hex colours, such as #c72b3b.');return}
+  const seen=new Set();S.palette=[];for(const h of m){const k=h.toLowerCase();if(seen.has(k)||S.palette.length>=64)continue;seen.add(k);const c=hx(k)[0];S.palette.push({r:c[0],g:c[1],b:c[2],sym:SYMS[S.palette.length%SYMS.length],code:null})}
+  S.hi=-1;goCustom();repalette()});
+$('addCol').addEventListener('click',()=>{const c=hx($('newCol').value)[0],used=new Set(S.palette.map(p=>p.sym));
+  S.palette.push({r:c[0],g:c[1],b:c[2],sym:SYMS.find(s=>!used.has(s))||'?',code:null});goCustom();repalette()});
+$('lock').addEventListener('change',e=>{S.locked=e.target.checked;syncLock();renderKey();autosave()});
+$('name').addEventListener('input',e=>{S.name=e.target.value;autosave()});
+$('mode').addEventListener('change',e=>{S.mode=e.target.value;draw();autosave()});
+$('zoom').addEventListener('input',e=>setZoom(+e.target.value));
+$('fit').addEventListener('click',fit);
+$('actual').addEventListener('click',()=>setZoom(96/fabricCount()));
+$('hiChip').addEventListener('click',()=>setHi(-1));
+$('tMark').addEventListener('click',()=>{S.tool='mark';syncUI()});
+$('tFill').addEventListener('click',()=>{S.tool='fill';syncUI()});
+$('undo').addEventListener('click',doUndo);
+$('clearMarks').addEventListener('click',()=>{if(!doneTotal)return;ask('Clear all '+doneTotal.toLocaleString()+' stitched marks on this pattern?',[{label:'Keep them'},{label:'Clear marks',pri:1,fn(){S.done.fill(0);undo=[];recount();updateCounts();draw();autosave()}}])});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)){e.preventDefault();doUndo()}if(e.key==='Escape'&&S.hi>=0)setHi(-1)});
+view.addEventListener('scroll',draw);
+new ResizeObserver(draw).observe(view);
+function themeChanged(){readTheme();derive();draw()}
+new MutationObserver(themeChanged).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeChanged)}catch(_){ }
+
+/* ---------- dialogs, toast ---------- */
+function ask(msg,btns){const d=$('dlg');$('dlgMsg').textContent=msg;const bx=$('dlgBtns');bx.innerHTML='';
+  for(const b of btns){const el=document.createElement('button');el.type='button';el.className='btn'+(b.pri?' pri':'');el.textContent=b.label;
+    el.addEventListener('click',()=>{try{d.close()}catch(_){d.removeAttribute('open')}if(b.fn)b.fn()});bx.appendChild(el)}
+  try{d.showModal()}catch(_){d.setAttribute('open','')}}
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),3800)}
+
+/* ---------- image loading ---------- */
+function toCanvas(im){const s=Math.min(1,1400/Math.max(im.naturalWidth||im.width,im.naturalHeight||im.height)),c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round((im.naturalWidth||im.width)*s));c.height=Math.max(1,Math.round((im.naturalHeight||im.height)*s));c.getContext('2d').drawImage(im,0,0,c.width,c.height);return c}
+function setSource(c){src=c;const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let a=false;for(let i=3;i<d.length;i+=28)if(d[i]<250){a=true;break}
+  srcData=c.toDataURL(a?'image/png':'image/jpeg',.85);$('thumb').src=srcData}
+function newPattern(c,name){setSource(c);S.name=name;S.done=new Uint8Array(0);S.locked=false;undo=[];S.hi=-1;
+  if(S.palSource==='custom'&&!S.palette.length){S.custom=false;S.palSource='dmc'}
+  setW(S.keep==='size'?S.finIn*fabricCount():S.w);syncUI();process();fit()}
+function loadImageFile(f){if(!f)return;if(!/^image\//.test(f.type)){toast('That file is not an image. Try a JPG, PNG, GIF or WebP.');return}
+  const go=()=>{const u=URL.createObjectURL(f),im=new Image();
+    im.onload=()=>{URL.revokeObjectURL(u);$('dropT').textContent=f.name;newPattern(toCanvas(im),f.name.replace(/\.[^.]+$/,'').slice(0,60)||'Untitled pattern')};
+    im.onerror=()=>{URL.revokeObjectURL(u);toast("The browser couldn't read that image. Try saving it as JPG or PNG first.")};im.src=u};
+  if(doneTotal>0)ask(`Start a new pattern from this image? “${S.name}” has ${doneTotal.toLocaleString()} stitched marks that will be lost unless you save first.`,
+    [{label:'Cancel'},{label:'Start without saving',fn:go},{label:'Save, then start',pri:1,fn(){saveLocal();go()}}]);else go()}
+$('file').addEventListener('change',e=>{loadImageFile(e.target.files[0]);e.target.value=''});
+const drop=$('drop');
+for(const ev of['dragenter','dragover'])document.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over')});
+for(const ev of['dragleave','drop'])document.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')});
+document.addEventListener('drop',e=>{const f=e.dataTransfer&&e.dataTransfer.files[0];if(!f)return;if(/json$/.test(f.type)||/\.json$/i.test(f.name))openProjectFile(f);else loadImageFile(f)});
+
+function sampleImage(){const c=document.createElement('canvas');c.width=c.height=420;const x=c.getContext('2d');
+  let g=x.createLinearGradient(0,0,0,420);g.addColorStop(0,'#bfe0ea');g.addColorStop(1,'#f4ecd4');x.fillStyle=g;x.fillRect(0,0,420,420);
+  x.fillStyle='#6f9a4e';x.beginPath();x.ellipse(210,450,340,95,0,0,7);x.fill();
+  const flower=(cx,cy,r,c1,c2)=>{x.strokeStyle='#3f7a3a';x.lineWidth=r*.15;x.lineCap='round';x.beginPath();x.moveTo(cx,cy);x.quadraticCurveTo(cx+r*.35,(cy+385)/2,cx,385);x.stroke();
+    x.fillStyle='#4f9145';x.beginPath();x.ellipse(cx+r*.55,(cy+385)/2+25,r*.5,r*.17,-.6,0,7);x.fill();x.beginPath();x.ellipse(cx-r*.45,(cy+385)/2+55,r*.5,r*.17,.6,0,7);x.fill();
+    for(let k=0;k<8;k++){x.save();x.translate(cx,cy);x.rotate(k*Math.PI/4);const pg=x.createLinearGradient(0,0,0,-r*1.15);pg.addColorStop(0,c2);pg.addColorStop(1,c1);x.fillStyle=pg;x.beginPath();x.ellipse(0,-r*.62,r*.3,r*.55,0,0,7);x.fill();x.restore()}
+    const cg=x.createRadialGradient(cx-r*.08,cy-r*.08,1,cx,cy,r*.3);cg.addColorStop(0,'#ffe27a');cg.addColorStop(1,'#d98a1e');x.fillStyle=cg;x.beginPath();x.arc(cx,cy,r*.3,0,7);x.fill()};
+  flower(92,235,52,'#ffe08a','#e58a2c');flower(328,228,58,'#cdb8f0','#6a48ad');flower(210,165,88,'#f8a9bb','#c2264b');return c}
+
+/* ---------- save / load ---------- */
+function b64(u){let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)}
+function unb64(s){const b=atob(s||''),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+function pack(d){const o=new Uint8Array(Math.ceil(d.length/8));for(let i=0;i<d.length;i++)if(d[i])o[i>>3]|=1<<(i&7);return o}
+function unpack(p,n){const d=new Uint8Array(n);for(let i=0;i<n;i++)d[i]=(p[i>>3]>>(i&7))&1;return d}
+function serialize(withSrc){const o={app:'stitch-chart',v:1,saved:Date.now()};
+  for(const k of['name','w','h','fabric','unit','keep','finIn','dither','strength','bri','con','sat','palSource','nColors','custom','locked','mode','cs'])o[k]=S[k];
+  o.palette=S.palette.map(p=>({r:p.r,g:p.g,b:p.b,sym:p.sym,code:p.code}));o.cells=b64(S.cells);o.done=b64(pack(S.done));o.src=withSrc?srcData:null;return o}
+function applyProject(o){if(!o||o.app!=='stitch-chart'||!(o.w>0)||!(o.h>0)||!Array.isArray(o.palette)||!o.palette.length)throw new Error('not a pattern');
+  const cells=unb64(o.cells);if(cells.length!==o.w*o.h)throw new Error('damaged');
+  Object.assign(S,{name:String(o.name||'Untitled pattern').slice(0,60),w:o.w|0,h:o.h|0,fabric:String(o.fabric||'14'),unit:o.unit==='cm'?'cm':'in',keep:o.keep==='st'?'st':'size',
+    finIn:+o.finIn||o.w/14,dither:o.dither||'fs',strength:+o.strength||0,bri:+o.bri||0,con:+o.con||0,sat:+o.sat||0,palSource:o.palSource||'custom',nColors:clamp(o.nColors|0,2,60),
+    custom:!!o.custom,locked:!!o.locked,mode:o.mode||'both',cs:clamp(o.cs|0,2,40),hi:-1});
+  S.palette=o.palette.slice(0,64).map(p=>({r:p.r&255,g:p.g&255,b:p.b&255,sym:String(p.sym||'?').slice(0,2),code:p.code?String(p.code).slice(0,16):null}));
+  for(let i=0;i<cells.length;i++)if(cells[i]>=S.palette.length)cells[i]=255;
+  S.cells=cells;S.done=unpack(unb64(o.done),o.w*o.h);PX=null;src=null;srcData=null;undo=[];$('thumb').removeAttribute('src');$('dropT').textContent='Upload an image';
+  derive();recount();syncUI();renderKey();layout();draw();
+  if(typeof o.src==='string'&&/^data:image\//.test(o.src)){const im=new Image();im.onload=()=>{src=toCanvas(im);srcData=o.src;$('thumb').src=o.src;syncLock();renderKey()};im.src=o.src}}
+
+const LS={get(k){try{return localStorage.getItem(k)}catch(_){return null}},set(k,v){try{localStorage.setItem(k,v);return true}catch(_){return false}},del(k){try{localStorage.removeItem(k)}catch(_){ }}};
+const getIndex=()=>{try{return JSON.parse(LS.get('stitch:index'))||[]}catch(_){return[]}};
+function store(key){return LS.set(key,JSON.stringify(serialize(true)))?2:LS.set(key,JSON.stringify(serialize(false)))?1:0}
+let at;function autosave(){clearTimeout(at);at=setTimeout(()=>{if(S.cells.length)store('stitch:auto')},700)}
+function saveLocal(){const name=S.name.trim()||'Untitled pattern',r=store('stitch:p:'+name);
+  if(!r){toast("Couldn't save in this browser (storage is full or blocked). Download a project file instead.");return}
+  const idx=getIndex().filter(e=>e.name!==name);idx.unshift({name,saved:Date.now(),w:S.w,h:S.h,pct:total?Math.floor(doneTotal/total*100):0});LS.set('stitch:index',JSON.stringify(idx));
+  renderSaves();toast(r===2?`Saved “${name}” in this browser.`:`Saved “${name}” without its source image (storage is nearly full).`)}
+function renderSaves(){const box=$('saves'),idx=getIndex();box.innerHTML='';
+  for(const e of idx){const el=document.createElement('div');el.className='save';
+    el.innerHTML=`<div><b>${esc(e.name)}</b><span>${e.w}×${e.h} · ${e.pct}% · ${new Date(e.saved).toLocaleDateString(undefined,{day:'numeric',month:'short'})}</span></div><button class="btn sm" type="button">Load</button><button class="btn sm" type="button" aria-label="Delete saved pattern ${esc(e.name)}">Delete</button>`;
+    const[,bl,bd]=el.children;
+    bl.addEventListener('click',()=>{const go=()=>{try{applyProject(JSON.parse(LS.get('stitch:p:'+e.name)));autosave();toast(`Loaded “${e.name}”.`)}catch(_){toast('That save could not be read.')}};
+      if(doneTotal>0&&S.name.trim()!==e.name)ask(`Load “${e.name}”? Unsaved marks on “${S.name}” will be lost.`,[{label:'Cancel'},{label:'Load',pri:1,fn:go}]);else go()});
+    bd.addEventListener('click',()=>ask(`Delete the saved pattern “${e.name}” from this browser?`,[{label:'Keep it'},{label:'Delete',pri:1,fn(){LS.del('stitch:p:'+e.name);LS.set('stitch:index',JSON.stringify(getIndex().filter(x=>x.name!==e.name)));renderSaves()}}]));
+    box.appendChild(el)}}
+$('btnSave').addEventListener('click',saveLocal);$('btnSave2').addEventListener('click',saveLocal);
+
+const dlReady=(async()=>{try{if(window.claude&&window.claude.use)return await window.claude.use('downloads')}catch(_){ }return null})();
+async function saveFile(filename,data){const dl=await dlReady;
+  if(dl){try{await dl.save({filename,data});toast('Saved '+filename)}catch(e){if(!e||e.code!=='declined')toast('The download did not go through'+(e&&e.code?' ('+e.code+')':'')+'. Try again.')}return}
+  try{const a=document.createElement('a'),u=URL.createObjectURL(data instanceof Blob?data:new Blob([data]));a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),8000)}
+  catch(_){toast('Downloads are not available in this view.')}}
+const slug=()=>(S.name.trim().replace(/[^\w\- ]+/g,'').replace(/\s+/g,'-').slice(0,50)||'pattern');
+$('dlProj').addEventListener('click',()=>saveFile(slug()+'.json',JSON.stringify(serialize(true))));
+function openProjectFile(f){if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{applyProject(JSON.parse(r.result));autosave();toast(`Opened “${S.name}”.`)}catch(_){toast('That file is not a Stitch Chart project. Choose a .json file downloaded from this page.')}};
+  r.onerror=()=>toast('The file could not be read.');r.readAsText(f)}
+$('pfile').addEventListener('change',e=>{openProjectFile(e.target.files[0]);e.target.value=''});
+$('openLbl').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('pfile').click()}});
+
+$('dlPng').addEventListener('click',()=>{const cs=clamp(Math.floor(4200/Math.max(S.w,S.h)),8,22),cw=RUL+S.w*cs+RUL,ch=RUL+S.h*cs+8;
+  const colW=190,cols=Math.max(1,Math.floor((cw-RUL)/colW)),rows=Math.ceil(S.palette.length/cols),lh=24,W=Math.max(cw,RUL+colW+RUL),H=ch+44+rows*lh+16;
+  const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);
+  derive(LIGHT);paint(x,{cs,ox:0,oy:0,vw:cw,vh:ch,th:LIGHT,hi:-1,hover:-1});
+  const ct=fabricCount();x.fillStyle=LIGHT.ink;x.textAlign='left';x.textBaseline='middle';x.font='600 14px "IBM Plex Sans",sans-serif';
+  x.fillText(`${S.name} · ${S.w} × ${S.h} stitches · ${$('fabric').selectedOptions[0].textContent} · ${(S.w/ct).toFixed(1)} × ${(S.h/ct).toFixed(1)} in`,RUL,ch+20,W-RUL*2);
+  S.palette.forEach((p,i)=>{const X=RUL+(i%cols)*colW,Y=ch+44+Math.floor(i/cols)*lh;x.fillStyle=p.css;x.fillRect(X,Y,18,18);x.strokeStyle=LIGHT.grid10;x.lineWidth=1;x.strokeRect(X+.5,Y+.5,18,18);
+    x.fillStyle=p.ink;x.textAlign='center';x.font='13px "IBM Plex Mono","Segoe UI Symbol","DejaVu Sans",sans-serif';x.fillText(p.sym,X+9,Y+10);
+    x.fillStyle=LIGHT.ink;x.textAlign='left';x.font='12px "IBM Plex Mono",monospace';x.fillText(`${p.code||toHex(p)}  ${TC[i]} st`,X+26,Y+10)});
+  derive();c.toBlob(b=>{if(b)saveFile(slug()+'-chart.png',b);else toast('The chart image could not be made.')},'image/png')});
+
+/* ---------- start ---------- */
+readTheme();renderSaves();
+(function start(){let ok=false;const a=LS.get('stitch:auto');
+  if(a){try{applyProject(JSON.parse(a));ok=true}catch(_){ }}
+  if(!ok){$('dropT').textContent='Sample image (upload your own)';newPattern(sampleImage(),'Sample flowers')}
+  requestAnimationFrame(()=>{if(!ok)fit();draw()});
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw)})();
+</script>
+</body>
+</html>

@@ -215,8 +215,8 @@ window.addEventListener('resize', handleResize);
 
 let tileSize = 0.25;
 let maxNum = 720;
-let rows = 32;
-let cols = 10;
+let rows = 48;
+let cols = 32;
 let flaps = [];
 let spinning = false;
 //generate flap grid
